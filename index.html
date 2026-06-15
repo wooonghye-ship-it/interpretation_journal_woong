@@ -173,11 +173,16 @@
 
     main {
       display: grid;
-      grid-template-columns: minmax(340px, 430px) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr);
       gap: 18px;
       width: min(1480px, 100%);
       margin: 0 auto;
       padding: 18px 24px 28px;
+    }
+
+    main.form-open {
+      grid-template-columns: minmax(0, 1fr) minmax(420px, 560px);
+      align-items: start;
     }
 
     .panel {
@@ -188,11 +193,18 @@
     }
 
     .entry-panel {
+      display: none;
+      grid-column: 2;
+      grid-row: 1;
       align-self: start;
       position: sticky;
       top: 82px;
       max-height: calc(100vh - 102px);
       overflow: auto;
+    }
+
+    main.form-open .entry-panel {
+      display: block;
     }
 
     .panel-header {
@@ -343,6 +355,8 @@
     }
 
     .main-space {
+      grid-column: 1;
+      grid-row: 1;
       display: grid;
       gap: 14px;
       align-content: start;
@@ -351,8 +365,30 @@
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
+    }
+
+    .term-builder {
+      display: grid;
+      gap: 8px;
+    }
+
+    .term-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .term-row input {
+      min-width: 0;
+    }
+
+    .term-actions {
+      display: flex;
+      justify-content: flex-start;
+      margin-top: 2px;
     }
 
     .stat {
@@ -639,13 +675,20 @@
     }
 
     @media (max-width: 1160px) {
-      main {
+      main,
+      main.form-open {
         grid-template-columns: 1fr;
       }
 
       .entry-panel {
+        grid-column: 1;
+        grid-row: 1;
         position: static;
         max-height: none;
+      }
+
+      main.form-open .main-space {
+        grid-row: 2;
       }
 
       .stats-grid {
@@ -685,7 +728,8 @@
 
       .field-grid,
       .filters,
-      .stats-grid {
+      .stats-grid,
+      .term-row {
         grid-template-columns: 1fr;
       }
 
@@ -787,14 +831,14 @@
       </div>
     </header>
 
-    <main>
+    <main id="appMain">
       <section class="panel entry-panel" aria-label="통역 일지 작성">
         <div class="panel-header">
           <div>
             <h2 class="panel-title" id="formTitle">새 기록</h2>
             <div class="panel-meta" id="formMeta">필수 항목은 날짜와 제목입니다.</div>
           </div>
-          <button class="btn icon-btn btn-quiet" type="button" id="clearBtn" title="입력 초기화">
+          <button class="btn icon-btn btn-quiet" type="button" id="clearBtn" title="입력 닫기">
             <svg><use href="#icon-x"></use></svg>
           </button>
         </div>
@@ -860,8 +904,14 @@
               <textarea id="summary" name="summary"></textarea>
             </div>
             <div class="field full">
-              <label for="terms">용어</label>
-              <textarea id="terms" name="terms" placeholder="원어 = 번역어 / 메모"></textarea>
+              <label>용어</label>
+              <input type="hidden" id="terms" name="terms">
+              <div class="term-builder" id="termBuilder" aria-label="용어 입력"></div>
+              <div class="term-actions">
+                <button class="btn" type="button" id="addTermBtn">
+                  <svg><use href="#icon-plus"></use></svg><span>용어 추가</span>
+                </button>
+              </div>
             </div>
             <div class="field full">
               <label for="issues">아쉬운 점</label>
@@ -900,14 +950,6 @@
           <div class="stat">
             <div class="stat-label"><svg><use href="#icon-clock"></use></svg>통역 시간</div>
             <div class="stat-value" id="statHours">0h</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label"><svg><use href="#icon-filter"></use></svg>주요 분야</div>
-            <div class="stat-value" id="statDomain">-</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label"><svg><use href="#icon-check"></use></svg>완료율</div>
-            <div class="stat-value" id="statDone">0%</div>
           </div>
         </div>
 
@@ -1618,7 +1660,7 @@
     };
 
     document.addEventListener("DOMContentLoaded", () => {
-      setDefaultDate();
+      resetForm();
       bindEvents();
       render();
       updateDuration();
@@ -1626,8 +1668,8 @@
 
     function bindEvents() {
       $("entryForm").addEventListener("submit", saveEntry);
-      $("newBtn").addEventListener("click", resetForm);
-      $("clearBtn").addEventListener("click", resetForm);
+      $("newBtn").addEventListener("click", openNewEntryForm);
+      $("clearBtn").addEventListener("click", closeEntryForm);
       $("deleteCurrentBtn").addEventListener("click", deleteCurrentEntry);
       $("exportBtn").addEventListener("click", () => downloadCsv(state.entries, "interpreter-log.csv"));
       $("importBtn").addEventListener("click", openImport);
@@ -1641,6 +1683,12 @@
       $("csvFile").addEventListener("change", handleCsvFile);
       $("calendarPaste").addEventListener("input", handleCalendarPaste);
       $("calendarPaste").addEventListener("paste", () => window.setTimeout(handleCalendarPaste, 0));
+      $("addTermBtn").addEventListener("click", () => addTermRow());
+      $("termBuilder").addEventListener("input", updateTermsValue);
+      $("termBuilder").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-action='remove-term']");
+        if (button) removeTermRow(button);
+      });
       $("startTime").addEventListener("input", updateDuration);
       $("endTime").addEventListener("input", updateDuration);
 
@@ -1985,6 +2033,21 @@
       return new Date(date.getTime() - offset).toISOString().slice(0, 10);
     }
 
+    function openNewEntryForm() {
+      resetForm();
+      openEntryPanel();
+      $("calendarPaste").focus();
+    }
+
+    function openEntryPanel() {
+      $("appMain").classList.add("form-open");
+    }
+
+    function closeEntryForm() {
+      resetForm();
+      $("appMain").classList.remove("form-open");
+    }
+
     function saveEntry(event) {
       event.preventDefault();
       const entry = readForm();
@@ -2033,7 +2096,7 @@
         endTime: $("endTime").value,
         durationMinutes: getDurationMinutes($("startTime").value, $("endTime").value),
         summary: $("summary").value.trim(),
-        terms: $("terms").value.trim(),
+        terms: serializeTermRows(),
         issues: $("issues").value.trim(),
         followUp: $("followUp").value.trim(),
         memo: $("memo").value.trim(),
@@ -2054,7 +2117,7 @@
       $("startTime").value = entry.startTime || "";
       $("endTime").value = entry.endTime || "";
       $("summary").value = entry.summary || "";
-      $("terms").value = entry.terms || "";
+      renderTermRows(parseTermsText(entry.terms));
       $("issues").value = entry.issues || "";
       $("followUp").value = entry.followUp || "";
       $("memo").value = entry.memo || "";
@@ -2064,6 +2127,7 @@
       $("formTitle").textContent = entry.id ? "기록 편집" : "새 기록";
       $("formMeta").textContent = entry.updatedAt ? `수정 ${formatDateTime(entry.updatedAt)}` : "필수 항목은 날짜와 제목입니다.";
       $("deleteCurrentBtn").style.visibility = entry.id ? "visible" : "hidden";
+      openEntryPanel();
       updateDuration();
     }
 
@@ -2077,6 +2141,7 @@
       $("formTitle").textContent = "새 기록";
       $("formMeta").textContent = "필수 항목은 날짜와 제목입니다.";
       $("deleteCurrentBtn").style.visibility = "hidden";
+      renderTermRows([]);
       updateDuration();
     }
 
@@ -2098,7 +2163,7 @@
       if (!ok) return;
       state.entries = state.entries.filter((item) => item.id !== id);
       persist();
-      resetForm();
+      closeEntryForm();
       render();
       toast("삭제됨", entry.project || "기록");
     }
@@ -2110,9 +2175,70 @@
       if (!ok) return;
       state.entries = state.entries.filter((item) => item.id !== id);
       persist();
-      if ($("entryId").value === id) resetForm();
+      if ($("entryId").value === id) closeEntryForm();
       render();
       toast("삭제됨", entry.project || "기록");
+    }
+
+    function renderTermRows(terms) {
+      const rows = (terms || []).filter((term) => term.source || term.translation || term.description);
+      $("termBuilder").innerHTML = "";
+      (rows.length ? rows : [{ source: "", translation: "", description: "" }]).forEach(addTermRow);
+      updateTermsValue();
+    }
+
+    function addTermRow(term = {}) {
+      const row = document.createElement("div");
+      row.className = "term-row";
+      row.dataset.termRow = "true";
+      row.innerHTML = `
+        <input type="text" data-term-source aria-label="용어 원문" placeholder="원문" value="${escapeHtml(term.source || "")}">
+        <input type="text" data-term-translation aria-label="용어 번역" placeholder="번역" value="${escapeHtml(term.translation || "")}">
+        <input type="text" data-term-description aria-label="용어 메모" placeholder="메모 (선택)" value="${escapeHtml(term.description || "")}">
+        <button class="btn icon-btn btn-quiet" type="button" title="용어 삭제" data-action="remove-term">
+          <svg><use href="#icon-trash"></use></svg>
+        </button>`;
+      $("termBuilder").appendChild(row);
+      updateTermsValue();
+    }
+
+    function removeTermRow(button) {
+      const row = button.closest("[data-term-row]");
+      if (!row) return;
+      const rows = [...$("termBuilder").querySelectorAll("[data-term-row]")];
+      if (rows.length <= 1) {
+        row.querySelectorAll("input").forEach((input) => { input.value = ""; });
+      } else {
+        row.remove();
+      }
+      updateTermsValue();
+    }
+
+    function readTermRows() {
+      return [...$("termBuilder").querySelectorAll("[data-term-row]")]
+        .map((row) => ({
+          source: row.querySelector("[data-term-source]").value.trim(),
+          translation: row.querySelector("[data-term-translation]").value.trim(),
+          description: row.querySelector("[data-term-description]").value.trim()
+        }))
+        .filter((term) => term.source || term.translation || term.description);
+    }
+
+    function serializeTermRows() {
+      const value = readTermRows().map(formatTermLine).join("\n");
+      $("terms").value = value;
+      return value;
+    }
+
+    function updateTermsValue() {
+      $("terms").value = readTermRows().map(formatTermLine).join("\n");
+    }
+
+    function formatTermLine(term) {
+      return [term.source, term.translation, term.description]
+        .map((value) => String(value || "").trim())
+        .filter(Boolean)
+        .join(" - ");
     }
 
     function setMode(value) {
@@ -2133,13 +2259,8 @@
     function renderStats() {
       const count = state.entries.length;
       const totalMinutes = state.entries.reduce((sum, entry) => sum + safeNumber(entry.durationMinutes), 0);
-      const domains = countBy(state.entries.map((entry) => entry.domain).filter(Boolean));
-      const topDomain = Object.entries(domains).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
-      const doneCount = state.entries.filter((entry) => ["done", "billed"].includes(normalizeStatus(entry.status))).length;
       $("statCount").textContent = count.toLocaleString("ko-KR");
       $("statHours").textContent = formatHours(totalMinutes);
-      $("statDomain").textContent = topDomain;
-      $("statDone").textContent = count ? `${Math.round((doneCount / count) * 100)}%` : "0%";
     }
 
     function renderTable() {
@@ -2221,7 +2342,7 @@
           <div class="empty">
             <div>
               <strong>아직 용어가 없습니다.</strong>
-              <span>일지의 용어 칸에 한 줄씩 적으면 이 탭에 모입니다.</span>
+              <span>일지의 용어 입력란에 원문과 번역을 추가하면 이 탭에 모입니다.</span>
             </div>
           </div>`;
         return;
@@ -2534,7 +2655,11 @@
     }
 
     function extractTerms(entry) {
-      return String(entry.terms || "")
+      return parseTermsText(entry.terms);
+    }
+
+    function parseTermsText(value) {
+      return String(value || "")
         .split(/\n+/)
         .map((line) => line.trim())
         .filter(Boolean)
@@ -2634,13 +2759,6 @@
     function safeNumber(value) {
       const number = Number(value);
       return Number.isFinite(number) ? number : 0;
-    }
-
-    function countBy(values) {
-      return values.reduce((acc, value) => {
-        acc[value] = (acc[value] || 0) + 1;
-        return acc;
-      }, {});
     }
 
     function unique(values) {
