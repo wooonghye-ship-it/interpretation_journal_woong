@@ -754,6 +754,12 @@
     <symbol id="icon-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor">
       <path d="M4 5h16"></path><path d="M7 12h10"></path><path d="M10 19h4"></path>
     </symbol>
+    <symbol id="icon-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M21 12a9 9 0 0 1-15.3 6.4"></path>
+      <path d="M3 12A9 9 0 0 1 18.3 5.6"></path>
+      <path d="M18 2v4h-4"></path>
+      <path d="M6 22v-4h4"></path>
+    </symbol>
   </svg>
 
   <div class="app-shell">
@@ -774,6 +780,9 @@
         </button>
         <button class="btn" type="button" id="exportBtn" title="CSV 내보내기">
           <svg><use href="#icon-download"></use></svg><span>내보내기</span>
+        </button>
+        <button class="btn" type="button" id="syncSettingsBtn" title="Google Sheets 동기화">
+          <svg><use href="#icon-sync"></use></svg><span>동기화</span>
         </button>
       </div>
     </header>
@@ -969,6 +978,41 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="syncModal" role="dialog" aria-modal="true" aria-labelledby="syncTitle">
+    <div class="modal">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title" id="syncTitle">Google Sheets 동기화</h2>
+          <div class="panel-meta" id="syncMeta">Apps Script 웹 앱 URL을 저장하면 새 기록이 자동으로 시트에 반영됩니다.</div>
+        </div>
+        <button class="btn icon-btn btn-quiet" type="button" id="closeSyncBtn" title="닫기">
+          <svg><use href="#icon-x"></use></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="syncEndpoint">Apps Script 웹 앱 URL</label>
+          <input id="syncEndpoint" type="url" placeholder="https://script.google.com/macros/s/.../exec">
+        </div>
+        <div class="import-options">
+          <label class="radio"><input type="checkbox" id="syncEnabled">저장할 때 Google Sheets에 자동 반영</label>
+        </div>
+        <div class="field">
+          <label for="syncStatusText">상태</label>
+          <input id="syncStatusText" type="text" readonly>
+        </div>
+        <div class="form-actions">
+          <button class="btn" type="button" id="syncPendingBtn">
+            <svg><use href="#icon-sync"></use></svg><span>대기 기록 전송</span>
+          </button>
+          <button class="btn btn-primary" type="button" id="saveSyncBtn">
+            <svg><use href="#icon-save"></use></svg><span>설정 저장</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <datalist id="languageList">
     <option value="한국어"><option value="영어"><option value="일본어"><option value="중국어">
     <option value="스페인어"><option value="프랑스어"><option value="독일어"><option value="베트남어">
@@ -990,6 +1034,8 @@
 
   <script>
     const STORAGE_KEY = "interpreter-log:v1";
+    const SYNC_SETTINGS_KEY = "interpreter-log:sync-settings:v1";
+    const SYNC_QUEUE_KEY = "interpreter-log:sync-queue:v1";
     const $ = (id) => document.getElementById(id);
     const fields = [
       "entryId", "calendarPaste", "date", "status", "sessionType", "project", "client",
@@ -1526,6 +1572,11 @@
       toFilter: "",
       activeView: "logs"
     };
+    const syncState = {
+      settings: loadSyncSettings(),
+      queue: loadSyncQueue(),
+      busy: false
+    };
 
     const headerMap = {
       date: ["date", "날짜", "일자", "통역일자", "작업일", "진행일"],
@@ -1580,9 +1631,13 @@
       $("deleteCurrentBtn").addEventListener("click", deleteCurrentEntry);
       $("exportBtn").addEventListener("click", () => downloadCsv(state.entries, "interpreter-log.csv"));
       $("importBtn").addEventListener("click", openImport);
+      $("syncSettingsBtn").addEventListener("click", openSyncSettings);
       $("closeImportBtn").addEventListener("click", closeImport);
+      $("closeSyncBtn").addEventListener("click", closeSyncSettings);
       $("runImportBtn").addEventListener("click", importCsv);
       $("downloadTemplateBtn").addEventListener("click", downloadTemplate);
+      $("saveSyncBtn").addEventListener("click", saveSyncSettings);
+      $("syncPendingBtn").addEventListener("click", syncPendingEntries);
       $("csvFile").addEventListener("change", handleCsvFile);
       $("calendarPaste").addEventListener("input", handleCalendarPaste);
       $("calendarPaste").addEventListener("paste", () => window.setTimeout(handleCalendarPaste, 0));
@@ -1612,9 +1667,16 @@
         if (event.target === $("importModal")) closeImport();
       });
 
+      $("syncModal").addEventListener("click", (event) => {
+        if (event.target === $("syncModal")) closeSyncSettings();
+      });
+
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && $("importModal").classList.contains("open")) {
           closeImport();
+        }
+        if (event.key === "Escape" && $("syncModal").classList.contains("open")) {
+          closeSyncSettings();
         }
       });
     }
@@ -1744,6 +1806,176 @@
       $("storageMeta").textContent = `${state.entries.length.toLocaleString("ko-KR")}건 저장됨`;
     }
 
+    function loadSyncSettings() {
+      try {
+        const raw = localStorage.getItem(SYNC_SETTINGS_KEY);
+        return raw ? JSON.parse(raw) : { endpoint: "", enabled: false };
+      } catch {
+        return { endpoint: "", enabled: false };
+      }
+    }
+
+    function saveSyncSettingsToStorage() {
+      localStorage.setItem(SYNC_SETTINGS_KEY, JSON.stringify(syncState.settings));
+    }
+
+    function loadSyncQueue() {
+      try {
+        const raw = localStorage.getItem(SYNC_QUEUE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function persistSyncQueue() {
+      localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(syncState.queue));
+    }
+
+    function openSyncSettings() {
+      $("syncEndpoint").value = syncState.settings.endpoint || "";
+      $("syncEnabled").checked = Boolean(syncState.settings.enabled);
+      renderSyncStatus();
+      $("syncModal").classList.add("open");
+      $("syncEndpoint").focus();
+    }
+
+    function closeSyncSettings() {
+      $("syncModal").classList.remove("open");
+    }
+
+    function saveSyncSettings() {
+      const endpoint = $("syncEndpoint").value.trim();
+      const enabled = $("syncEnabled").checked;
+      if (enabled && !isValidSyncEndpoint(endpoint)) {
+        toast("동기화 설정 확인", "Apps Script 웹 앱 URL을 입력해 주세요.");
+        return;
+      }
+      syncState.settings = { endpoint, enabled };
+      saveSyncSettingsToStorage();
+      renderSyncStatus();
+      toast("동기화 설정 저장됨", enabled ? "자동 동기화가 켜졌습니다." : "자동 동기화가 꺼졌습니다.");
+      if (enabled) syncPendingEntries({ silent: true });
+    }
+
+    function renderSyncStatus() {
+      const pending = syncState.queue.length;
+      const enabled = syncState.settings.enabled && isValidSyncEndpoint(syncState.settings.endpoint);
+      const label = enabled ? `동기화 켜짐 · 대기 ${pending}건` : `동기화 꺼짐 · 대기 ${pending}건`;
+      $("storageMeta").textContent = `${state.entries.length.toLocaleString("ko-KR")}건 저장됨 · ${label}`;
+      if ($("syncStatusText")) $("syncStatusText").value = label;
+    }
+
+    function isValidSyncEndpoint(value) {
+      return /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/i.test(String(value || "").trim());
+    }
+
+    function queueEntryForSync(entry) {
+      if (!syncState.settings.enabled || !isValidSyncEndpoint(syncState.settings.endpoint)) return;
+      const payload = buildSheetPayload(entry);
+      const index = syncState.queue.findIndex((item) => item.id === payload.id);
+      if (index >= 0) {
+        syncState.queue[index] = payload;
+      } else {
+        syncState.queue.push(payload);
+      }
+      persistSyncQueue();
+      renderSyncStatus();
+    }
+
+    async function syncPendingEntries(options = {}) {
+      const silent = Boolean(options.silent);
+      if (syncState.busy) return;
+      if (!syncState.settings.enabled || !isValidSyncEndpoint(syncState.settings.endpoint)) {
+        if (!silent) toast("동기화 설정 필요", "Apps Script 웹 앱 URL을 저장해 주세요.");
+        return;
+      }
+      if (!syncState.queue.length) {
+        if (!silent) toast("동기화 완료", "대기 중인 기록이 없습니다.");
+        return;
+      }
+
+      syncState.busy = true;
+      renderSyncStatus();
+      const pending = [...syncState.queue];
+      const syncedIds = [];
+      try {
+        for (const payload of pending) {
+          await postToSheet(payload);
+          syncedIds.push(payload.id);
+        }
+        syncState.queue = syncState.queue.filter((item) => !syncedIds.includes(item.id));
+        persistSyncQueue();
+        renderSyncStatus();
+        if (!silent || syncedIds.length) toast("Google Sheets 동기화", `${syncedIds.length}건 반영됨`);
+      } catch (error) {
+        renderSyncStatus();
+        if (!silent) toast("동기화 실패", error.message || "잠시 후 다시 시도해 주세요.");
+      } finally {
+        syncState.busy = false;
+      }
+    }
+
+    async function postToSheet(payload) {
+      const body = JSON.stringify({ endpoint: syncState.settings.endpoint, record: payload });
+      if (window.location.protocol.startsWith("http")) {
+        const proxied = await postViaProxy(body);
+        if (proxied) return proxied;
+      }
+
+      await fetch(syncState.settings.endpoint, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "upsert", record: payload })
+      });
+      return { ok: true, opaque: true };
+    }
+
+    async function postViaProxy(body) {
+      const response = await fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body
+      });
+      if (response.status === 404 || response.status === 501) return null;
+
+      let result = {};
+      try {
+        result = await response.json();
+      } catch {
+        result = {};
+      }
+      if (!response.ok || result.ok === false) {
+        throw new Error(result.error || `동기화 서버 오류 (${response.status})`);
+      }
+      return result;
+    }
+
+    function buildSheetPayload(entry) {
+      const tags = Array.isArray(entry.tags) ? entry.tags : splitTags(entry.tags || "");
+      return {
+        id: entry.id,
+        date: entry.date || "",
+        sessionType: entry.sessionType || "",
+        mode: getEntryMode(entry),
+        project: entry.project || "",
+        team: entry.client || "",
+        requester: entry.requester || "",
+        meetingLink: entry.meetingLink || "",
+        startTime: entry.startTime || "",
+        endTime: entry.endTime || "",
+        durationMinutes: safeNumber(entry.durationMinutes),
+        summary: entry.summary || "",
+        issues: entry.issues || "",
+        followUp: entry.followUp || "",
+        terms: entry.terms || "",
+        memo: entry.memo || "",
+        tags: tags.join(", "),
+        updatedAt: entry.updatedAt || new Date().toISOString()
+      };
+    }
+
     function setDefaultDate() {
       $("date").value = toDateInput(new Date());
     }
@@ -1781,6 +2013,8 @@
       render();
       editEntry(entry.id);
       toast("저장됨", entry.project);
+      queueEntryForSync(entry);
+      syncPendingEntries({ silent: true });
     }
 
     function readForm() {
@@ -1892,6 +2126,7 @@
       renderStats();
       renderTable();
       renderDatalists();
+      renderSyncStatus();
       $("deleteCurrentBtn").style.visibility = $("entryId").value ? "visible" : "hidden";
     }
 
