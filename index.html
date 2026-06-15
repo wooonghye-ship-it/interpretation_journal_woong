@@ -181,8 +181,7 @@
     }
 
     main.form-open {
-      grid-template-columns: minmax(0, 1fr) minmax(520px, 620px);
-      align-items: start;
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .panel {
@@ -194,13 +193,9 @@
 
     .entry-panel {
       display: none;
-      grid-column: 2;
+      grid-column: 1;
       grid-row: 1;
       align-self: start;
-      position: sticky;
-      top: 82px;
-      max-height: calc(100vh - 102px);
-      overflow: auto;
     }
 
     main.form-open .entry-panel {
@@ -354,17 +349,6 @@
       border-top: 1px solid var(--line);
     }
 
-    .entry-panel .form-actions {
-      position: sticky;
-      bottom: 0;
-      z-index: 6;
-      margin: 16px -18px -18px;
-      padding: 12px 18px;
-      background: rgba(255, 255, 255, 0.96);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 -10px 24px rgba(20, 36, 31, 0.08);
-    }
-
     .main-space {
       grid-column: 1;
       grid-row: 1;
@@ -372,6 +356,10 @@
       gap: 14px;
       align-content: start;
       min-width: 0;
+    }
+
+    main.form-open .main-space {
+      display: none;
     }
 
     .stats-grid {
