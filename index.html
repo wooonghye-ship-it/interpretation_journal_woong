@@ -181,7 +181,7 @@
     }
 
     main.form-open {
-      grid-template-columns: minmax(0, 1fr) minmax(420px, 560px);
+      grid-template-columns: minmax(0, 1fr) minmax(520px, 620px);
       align-items: start;
     }
 
@@ -354,6 +354,17 @@
       border-top: 1px solid var(--line);
     }
 
+    .entry-panel .form-actions {
+      position: sticky;
+      bottom: 0;
+      z-index: 6;
+      margin: 16px -18px -18px;
+      padding: 12px 18px;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 -10px 24px rgba(20, 36, 31, 0.08);
+    }
+
     .main-space {
       grid-column: 1;
       grid-row: 1;
@@ -376,13 +387,23 @@
 
     .term-row {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 36px;
       gap: 8px;
       align-items: start;
     }
 
     .term-row input {
       min-width: 0;
+    }
+
+    .term-row [data-term-description] {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+
+    .term-row [data-action="remove-term"] {
+      grid-column: 3;
+      grid-row: 1;
     }
 
     .term-actions {
@@ -584,6 +605,30 @@
       display: flex;
       gap: 4px;
       justify-content: flex-end;
+    }
+
+    main.form-open .log-table .mode-cell,
+    main.form-open .log-table .tag-cell,
+    main.form-open .log-table .duration-cell,
+    main.form-open .log-table .memo-cell {
+      display: none;
+    }
+
+    main.form-open .log-table .date-cell {
+      width: 104px;
+      white-space: nowrap;
+    }
+
+    main.form-open .log-table .title-cell .muted {
+      display: block;
+      max-width: 320px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    main.form-open .log-table .badge-row .badge:not([class*="status-"]) {
+      display: none;
     }
 
     .modal-backdrop {
@@ -2285,7 +2330,7 @@
         const tags = Array.isArray(entry.tags) ? entry.tags : splitTags(entry.tags || "");
         return `
           <tr>
-            <td>${escapeHtml(formatDate(entry.date))}</td>
+            <td class="date-cell">${escapeHtml(formatDate(entry.date))}</td>
             <td class="title-cell">
               <strong>${escapeHtml(entry.project || "-")}</strong>
               <span class="muted">${escapeHtml([entry.client, entry.requester, entry.sessionType].filter(Boolean).join(" / ") || "-")}</span>
@@ -2294,11 +2339,11 @@
                 ${tags.slice(0, 3).map((tag) => `<span class="badge">${escapeHtml(tag)}</span>`).join("")}
               </div>
             </td>
-            <td>${escapeHtml(getEntryMode(entry))}</td>
-            <td>${escapeHtml(tags.join(", ") || entry.domain || "-")}</td>
-            <td>${escapeHtml(formatMinutes(entry.durationMinutes))}</td>
-            <td>${escapeHtml(shortText(entry.summary || entry.issues || entry.followUp || entry.memo || "", 120))}</td>
-            <td>
+            <td class="mode-cell">${escapeHtml(getEntryMode(entry))}</td>
+            <td class="tag-cell">${escapeHtml(tags.join(", ") || entry.domain || "-")}</td>
+            <td class="duration-cell">${escapeHtml(formatMinutes(entry.durationMinutes))}</td>
+            <td class="memo-cell">${escapeHtml(shortText(entry.summary || entry.issues || entry.followUp || entry.memo || "", 120))}</td>
+            <td class="actions-cell">
               <div class="row-actions">
                 <button class="btn icon-btn btn-quiet" type="button" title="편집" data-action="edit" data-id="${entry.id}">
                   <svg><use href="#icon-edit"></use></svg>
@@ -2312,16 +2357,16 @@
       }).join("");
 
       $("tableWrap").innerHTML = `
-        <table>
+        <table class="log-table">
           <thead>
             <tr>
-              <th>날짜</th>
-              <th>제목</th>
-              <th>방식</th>
-              <th>태그</th>
-              <th>분량</th>
-              <th>메모</th>
-              <th></th>
+              <th class="date-cell">날짜</th>
+              <th class="title-cell">제목</th>
+              <th class="mode-cell">방식</th>
+              <th class="tag-cell">태그</th>
+              <th class="duration-cell">분량</th>
+              <th class="memo-cell">메모</th>
+              <th class="actions-cell"></th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
