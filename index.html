@@ -1,0 +1,2492 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>통역 일지</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f5;
+      --panel: #ffffff;
+      --panel-alt: #f9faf8;
+      --line: #d8dfdc;
+      --line-strong: #aebbb6;
+      --text: #17211d;
+      --muted: #65736d;
+      --primary: #0f766e;
+      --primary-strong: #0b5d57;
+      --primary-soft: #d9f0ed;
+      --blue: #2563eb;
+      --amber: #b45309;
+      --rose: #be123c;
+      --shadow: 0 16px 35px rgba(20, 36, 31, 0.08);
+      --radius: 8px;
+      --font: "Inter", "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.45;
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+    }
+
+    svg {
+      width: 17px;
+      height: 17px;
+      flex: 0 0 auto;
+      stroke-width: 2;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 64px;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 180px;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius);
+      background: #173c3a;
+      color: white;
+      box-shadow: 0 8px 18px rgba(15, 118, 110, 0.22);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .brand small {
+      display: block;
+      margin-top: 1px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 36px;
+      padding: 0 12px;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      background: var(--panel);
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform 120ms ease, border-color 120ms ease, background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+    }
+
+    .btn:hover {
+      border-color: var(--line-strong);
+      box-shadow: 0 6px 14px rgba(23, 33, 29, 0.07);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-strong);
+      border-color: var(--primary-strong);
+    }
+
+    .btn-quiet {
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .btn-danger {
+      color: var(--rose);
+      background: #fff7f8;
+      border-color: #f5c6d1;
+    }
+
+    .icon-btn {
+      width: 36px;
+      padding: 0;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(340px, 430px) minmax(0, 1fr);
+      gap: 18px;
+      width: min(1480px, 100%);
+      margin: 0 auto;
+      padding: 18px 24px 28px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .entry-panel {
+      align-self: start;
+      position: sticky;
+      top: 82px;
+      max-height: calc(100vh - 102px);
+      overflow: auto;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 760;
+    }
+
+    .panel-meta {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    form {
+      padding: 16px 18px 18px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .field.hidden {
+      display: none;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      color: #33413c;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--text);
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    textarea {
+      min-height: 84px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+    }
+
+    .segment {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-alt);
+    }
+
+    .segment input {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .segment label {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 30px;
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 720;
+    }
+
+    .segment input:checked + label {
+      background: white;
+      color: var(--primary-strong);
+      box-shadow: 0 2px 8px rgba(20, 36, 31, 0.08);
+    }
+
+    .mode-segment {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .duration-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 72px;
+      min-height: 38px;
+      padding: 0 9px;
+      border-radius: var(--radius);
+      background: #edf7f4;
+      color: var(--primary-strong);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .main-space {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+      min-width: 0;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      padding: 14px 14px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      min-width: 0;
+    }
+
+    .stat-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 720;
+    }
+
+    .stat-value {
+      margin-top: 8px;
+      font-size: 24px;
+      font-weight: 820;
+      line-height: 1.05;
+      overflow-wrap: anywhere;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) 150px 140px 132px 132px;
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-alt);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 10px 12px 0;
+      background: var(--panel-alt);
+    }
+
+    .tab-btn {
+      min-height: 34px;
+      padding: 0 14px;
+      border-radius: var(--radius) var(--radius) 0 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 760;
+    }
+
+    .tab-btn.active {
+      background: white;
+      color: var(--primary-strong);
+      border: 1px solid var(--line);
+      border-bottom-color: white;
+    }
+
+    .searchbox {
+      position: relative;
+    }
+
+    .searchbox svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .searchbox input {
+      padding-left: 34px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: calc(100vh - 280px);
+    }
+
+    table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #eef3f1;
+      color: #33413c;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    td {
+      color: #26332f;
+    }
+
+    tr:hover td {
+      background: #fbfdfc;
+    }
+
+    .title-cell {
+      min-width: 220px;
+    }
+
+    .title-cell strong {
+      display: block;
+      margin-bottom: 3px;
+      font-weight: 780;
+      color: var(--text);
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 5px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      max-width: 160px;
+      padding: 0 7px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #1e40af;
+      font-size: 11px;
+      font-weight: 720;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badge.status-draft {
+      background: #fff7ed;
+      color: #9a3412;
+    }
+
+    .badge.status-done {
+      background: #ecfdf5;
+      color: #047857;
+    }
+
+    .badge.status-follow {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    .badge.status-billed {
+      background: #f7fee7;
+      color: #3f6212;
+    }
+
+    .empty {
+      display: grid;
+      place-items: center;
+      min-height: 220px;
+      padding: 28px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .empty strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 4px;
+      justify-content: flex-end;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(13, 24, 20, 0.46);
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(760px, 100%);
+      max-height: min(720px, 92vh);
+      overflow: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: white;
+      box-shadow: 0 24px 60px rgba(6, 18, 14, 0.28);
+    }
+
+    .modal-body {
+      padding: 16px 18px 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .import-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-alt);
+    }
+
+    .radio {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: #33413c;
+      font-weight: 700;
+    }
+
+    .radio input {
+      width: auto;
+      min-height: auto;
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 60;
+      display: grid;
+      gap: 4px;
+      min-width: min(360px, calc(100vw - 40px));
+      padding: 12px 14px;
+      border: 1px solid #c7e5df;
+      border-radius: var(--radius);
+      background: #f1fbf8;
+      color: #17433e;
+      box-shadow: var(--shadow);
+      transform: translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast strong {
+      font-size: 13px;
+    }
+
+    .toast span {
+      color: #3f635d;
+      font-size: 12px;
+    }
+
+    @media (max-width: 1160px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .entry-panel {
+        position: static;
+        max-height: none;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .table-wrap {
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .topbar {
+        align-items: flex-start;
+        padding: 12px 14px;
+      }
+
+      .brand {
+        min-width: 0;
+      }
+
+      .brand small {
+        white-space: normal;
+      }
+
+      .toolbar {
+        width: auto;
+      }
+
+      .toolbar .btn span {
+        display: none;
+      }
+
+      main {
+        padding: 12px;
+      }
+
+      .field-grid,
+      .filters,
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .range-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .duration-chip {
+        grid-column: 1 / -1;
+      }
+
+      .form-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+      }
+
+      .form-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <symbol id="icon-book" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+      <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"></path>
+      <path d="M8 7h8"></path>
+      <path d="M8 11h6"></path>
+    </symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M12 5v14"></path><path d="M5 12h14"></path>
+    </symbol>
+    <symbol id="icon-save" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M15.2 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.8z"></path>
+      <path d="M17 21v-8H7v8"></path><path d="M7 3v5h8"></path>
+    </symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <path d="M17 8l-5-5-5 5"></path><path d="M12 3v12"></path>
+    </symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path>
+    </symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path>
+    </symbol>
+    <symbol id="icon-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M12 20h9"></path>
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path>
+    </symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M3 6h18"></path><path d="M8 6V4h8v2"></path>
+      <path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v5"></path><path d="M14 11v5"></path>
+    </symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M18 6L6 18"></path><path d="M6 6l12 12"></path>
+    </symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>
+    </symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M20 6L9 17l-5-5"></path>
+    </symbol>
+    <symbol id="icon-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M4 5h16"></path><path d="M7 12h10"></path><path d="M10 19h4"></path>
+    </symbol>
+  </svg>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark"><svg><use href="#icon-book"></use></svg></div>
+        <div>
+          <h1>통역 일지</h1>
+          <small id="storageMeta">로컬 작업 공간</small>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-primary" type="button" id="newBtn" title="새 일지">
+          <svg><use href="#icon-plus"></use></svg><span>새 일지</span>
+        </button>
+        <button class="btn" type="button" id="importBtn" title="CSV 가져오기">
+          <svg><use href="#icon-upload"></use></svg><span>가져오기</span>
+        </button>
+        <button class="btn" type="button" id="exportBtn" title="CSV 내보내기">
+          <svg><use href="#icon-download"></use></svg><span>내보내기</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel entry-panel" aria-label="통역 일지 작성">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title" id="formTitle">새 기록</h2>
+            <div class="panel-meta" id="formMeta">필수 항목은 날짜와 제목입니다.</div>
+          </div>
+          <button class="btn icon-btn btn-quiet" type="button" id="clearBtn" title="입력 초기화">
+            <svg><use href="#icon-x"></use></svg>
+          </button>
+        </div>
+        <form id="entryForm">
+          <input type="hidden" id="entryId">
+          <div class="field-grid">
+            <div class="field full" id="calendarPasteField">
+              <label for="calendarPaste">팀업 캘린더 붙여넣기</label>
+              <textarea id="calendarPaste" name="calendarPaste" placeholder="팀업 캘린더 내용을 그대로 붙여넣으면 아래 항목이 자동으로 채워집니다."></textarea>
+            </div>
+            <div class="field">
+              <label for="date">날짜</label>
+              <input id="date" name="date" type="date" required>
+            </div>
+            <div class="field">
+              <label for="status">상태</label>
+              <select id="status" name="status">
+                <option value="draft">초안</option>
+                <option value="done">완료</option>
+                <option value="follow">후속</option>
+                <option value="billed">정산</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="sessionType">회의 형태</label>
+              <input id="sessionType" name="sessionType" type="text" list="sessionTypeList" placeholder="예: 화상회의">
+            </div>
+            <div class="field full">
+              <label for="project">제목</label>
+              <input id="project" name="project" type="text" required placeholder="예: [SN2] Weekly Dev <> Publishing">
+            </div>
+            <div class="field full">
+              <label for="client">팀</label>
+              <input id="client" name="client" type="text" list="clientList">
+            </div>
+            <div class="field full">
+              <label for="requester">요청자</label>
+              <input id="requester" name="requester" type="text">
+            </div>
+            <div class="field full">
+              <label>방식</label>
+              <div class="segment mode-segment" role="radiogroup" aria-label="통역 방식">
+                <input type="radio" id="modeOnsite" name="mode" value="현장">
+                <label for="modeOnsite">현장</label>
+                <input type="radio" id="modeRemote" name="mode" value="원격" checked>
+                <label for="modeRemote">원격</label>
+              </div>
+            </div>
+            <div class="field full">
+              <label for="meetingLink">미팅 링크</label>
+              <input id="meetingLink" name="meetingLink" type="url" placeholder="https://...">
+            </div>
+            <div class="field full">
+              <label>시간</label>
+              <div class="range-row">
+                <input id="startTime" name="startTime" type="time" aria-label="시작 시간">
+                <input id="endTime" name="endTime" type="time" aria-label="종료 시간">
+                <div class="duration-chip" id="durationChip">0분</div>
+              </div>
+            </div>
+            <div class="field full">
+              <label for="summary">잘한 점</label>
+              <textarea id="summary" name="summary"></textarea>
+            </div>
+            <div class="field full">
+              <label for="terms">용어</label>
+              <textarea id="terms" name="terms" placeholder="원어 = 번역어 / 메모"></textarea>
+            </div>
+            <div class="field full">
+              <label for="issues">아쉬운 점</label>
+              <textarea id="issues" name="issues"></textarea>
+            </div>
+            <div class="field full">
+              <label for="followUp">개선 / 다음 액션</label>
+              <textarea id="followUp" name="followUp"></textarea>
+            </div>
+            <div class="field full">
+              <label for="memo">메모</label>
+              <textarea id="memo" name="memo"></textarea>
+            </div>
+            <div class="field full">
+              <label for="tags">태그</label>
+              <input id="tags" name="tags" type="text" placeholder="쉼표로 구분">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-danger" type="button" id="deleteCurrentBtn" title="현재 기록 삭제">
+              <svg><use href="#icon-trash"></use></svg><span>삭제</span>
+            </button>
+            <button class="btn btn-primary" type="submit" title="저장">
+              <svg><use href="#icon-save"></use></svg><span>저장</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="main-space" aria-label="통역 일지 목록">
+        <div class="stats-grid" aria-live="polite">
+          <div class="stat">
+            <div class="stat-label"><svg><use href="#icon-book"></use></svg>총 기록</div>
+            <div class="stat-value" id="statCount">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label"><svg><use href="#icon-clock"></use></svg>통역 시간</div>
+            <div class="stat-value" id="statHours">0h</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label"><svg><use href="#icon-filter"></use></svg>주요 분야</div>
+            <div class="stat-value" id="statDomain">-</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label"><svg><use href="#icon-check"></use></svg>완료율</div>
+            <div class="stat-value" id="statDone">0%</div>
+          </div>
+        </div>
+
+        <section class="panel">
+          <div class="tabs" role="tablist" aria-label="보기 전환">
+            <button class="tab-btn active" type="button" role="tab" aria-selected="true" data-view="logs">일지</button>
+            <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="terms">용어</button>
+          </div>
+          <div class="filters">
+            <div class="searchbox">
+              <svg><use href="#icon-search"></use></svg>
+              <input id="searchInput" type="search" placeholder="검색">
+            </div>
+            <select id="modeFilter" aria-label="방식 필터">
+              <option value="">전체 방식</option>
+              <option value="현장">현장</option>
+              <option value="원격">원격</option>
+            </select>
+            <select id="statusFilter" aria-label="상태 필터">
+              <option value="">전체 상태</option>
+              <option value="draft">초안</option>
+              <option value="done">완료</option>
+              <option value="follow">후속</option>
+              <option value="billed">정산</option>
+            </select>
+            <input id="fromFilter" type="date" aria-label="시작일">
+            <input id="toFilter" type="date" aria-label="종료일">
+          </div>
+          <div class="table-wrap" id="tableWrap"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="importModal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+    <div class="modal">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title" id="importTitle">CSV 가져오기</h2>
+          <div class="panel-meta">Google Sheets에서 내려받은 CSV와 호환됩니다.</div>
+        </div>
+        <button class="btn icon-btn btn-quiet" type="button" id="closeImportBtn" title="닫기">
+          <svg><use href="#icon-x"></use></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="csvFile">파일</label>
+          <input id="csvFile" type="file" accept=".csv,text/csv">
+        </div>
+        <div class="field">
+          <label for="csvText">CSV</label>
+          <textarea id="csvText" style="min-height:220px"></textarea>
+        </div>
+        <div class="import-options">
+          <label class="radio"><input type="radio" name="importMode" value="append" checked>추가</label>
+          <label class="radio"><input type="radio" name="importMode" value="replace">교체</label>
+        </div>
+        <div class="form-actions">
+          <button class="btn" type="button" id="downloadTemplateBtn">
+            <svg><use href="#icon-download"></use></svg><span>템플릿</span>
+          </button>
+          <button class="btn btn-primary" type="button" id="runImportBtn">
+            <svg><use href="#icon-upload"></use></svg><span>가져오기</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <datalist id="languageList">
+    <option value="한국어"><option value="영어"><option value="일본어"><option value="중국어">
+    <option value="스페인어"><option value="프랑스어"><option value="독일어"><option value="베트남어">
+  </datalist>
+  <datalist id="domainList">
+    <option value="IT"><option value="제조"><option value="의료"><option value="법률">
+    <option value="금융"><option value="교육"><option value="공공"><option value="엔터테인먼트">
+  </datalist>
+  <datalist id="sessionTypeList">
+    <option value="화상회의"><option value="대면회의"><option value="교육"><option value="웨비나">
+    <option value="행사"><option value="리허설"><option value="출장">
+  </datalist>
+  <datalist id="clientList"></datalist>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <strong id="toastTitle"></strong>
+    <span id="toastBody"></span>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "interpreter-log:v1";
+    const $ = (id) => document.getElementById(id);
+    const fields = [
+      "entryId", "calendarPaste", "date", "status", "sessionType", "project", "client",
+      "requester", "meetingLink", "startTime", "endTime", "summary", "terms", "issues",
+      "followUp", "memo", "tags"
+    ];
+    const SEED_ENTRIES = [
+      {
+            "id": "seed_20260420_1",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-04-20",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "[Daily Scrum] Physical AI 한영만!!",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "AI",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 30,
+            "prepMinutes": "",
+            "difficulty": 7,
+            "score1": 3,
+            "score2": 3,
+            "score3": 4,
+            "rating": 4,
+            "participants": "",
+            "summary": "두 번째 들어가는 회의인데 저번보다는 많이 잡았음.",
+            "issues": "그럼에도 놓친 용어들이 꽤 있음.",
+            "followUp": "회의 전에 어젠다 미리 주시도록 쪼으기. 그것이 최선인듯.",
+            "terms": "OSC - a control method that allows a robot arm to move\nFlashSAC - training/reinforcement learning algorithm\n좌표 - coordinates\npnp - pick and place\nbasket - basket 안에 물건을 넣는다는 것 같음.",
+            "memo": "",
+            "tags": [
+                  "AI"
+            ]
+      },
+      {
+            "id": "seed_20260420_2",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-04-20",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "Weekly POD Update",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "인도",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 75,
+            "prepMinutes": "",
+            "difficulty": 7,
+            "score1": 3,
+            "score2": 4,
+            "score3": 3,
+            "rating": 4,
+            "participants": "",
+            "summary": "영한이 이전보다는 조금 느 것 같음. 시역 속도가 빨라진 것일수도..",
+            "issues": "여전히 영한이 한영에 비해 퀸리티가 너무 떨어짐.",
+            "followUp": "미리 어젠다 시역을 하고 가야함. 나는 사전 준비 없이는 아직 안됨.",
+            "terms": "PG사 - Payment Gateway (결제대행사)\n데이터브릭스 mart - 대규모 데이터 레이크하우스 내에 저장된 데이터 중 특정부서나 특정비즈니스 목적에 맞게 큐레이션된 하위 데이터 저장소\nTreasury - 자금\nFinance - 재무\nReimburse - 환급, 상환\nHonor of Kings - 왕자영요",
+            "memo": "영한 연습연습연습!!!!",
+            "tags": [
+                  "인도"
+            ]
+      },
+      {
+            "id": "mo7w509ypbiv",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-04-21",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "SN2",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "SN2",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 15,
+            "prepMinutes": "",
+            "difficulty": 5,
+            "score1": "",
+            "score2": "",
+            "score3": "",
+            "rating": "",
+            "participants": "",
+            "summary": "통역 턴이 돌아오기 전에 회의가 끝남",
+            "issues": "We have not talked to them if the date slips. if we are still able to get the full takeover marketing support, because I think they only... the only slot you are in for a set date, and i'm not sure what the next available window would be if we had to move the date. I don't think we've asked them, uh, if for marketing on backup dates. But I can also ask Jess if that has come up in a conversation with her and Valve.\n\n런칭 날짜가 바뀌는 시나리오에 대해서는 얘기해보지 않았어요. 그때도 takeover banner를 그대로 받을 수 있는지요. 왜냐면 고정된 날짜에 들어가는걸로 알고 있어서 일정이 바뀌면 가능한 윈도우가 언제일지 잘 모르겠네요. 다른 백업 날짜를 받을 수 있는지는 따로 물어보지 않았던 것 같아요. 근데 Jess님께 혹시 아는바가 있는지 여쭤볼게요. \n\nMS for cert that console looks good \nMS쪽 콘솔 서트를 받다",
+            "followUp": "--> Mike가 말할 때 조금 중언부언하는 것이 있어서 다시 한 번 느끼지만 단어 하나하나 따라가려는 습관을 버려야 함. 제일 위험한걸 알면서 불안하니까 하나하나 따라가려는 마음은 이해하지만.. 극복하쟈!!",
+            "terms": "load testing cap - 로드 테스트 캡",
+            "memo": "",
+            "tags": [
+                  "SN2"
+            ]
+      },
+      {
+            "id": "moaseigxa421",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-04-23",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "SN2 | UW Comms <> PD2 Community (recurring)",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "SN2",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 60,
+            "prepMinutes": "",
+            "difficulty": 5,
+            "score1": 3,
+            "score2": 4,
+            "score3": 4,
+            "rating": 4,
+            "participants": "",
+            "summary": "최대한 발화 끝날 때 맞춰서 통역도 끝내려고 노력한 것.",
+            "issues": "조금만 지직거려도 패닉하는 것.",
+            "followUp": "하... 최대한 집중해야지 뭐.",
+            "terms": "우선순위가 밀리다 - got pushed back, was deprioritized\ntrickle in - 사람/물건/정보 등이 조금씩 듬성듬성, 서서히 들어오다\nbundle them together in smaller batches - 더 작은 단위로 묶어서 처하다\nWaypoint\nOverflow - 화면간 사용자 흐름 다이어그램/프레젠테이션 보여주는 툴\nusual two posting slots are currently taken up by obviously today - 원래 갖고있는 두 개 슬롯은 현 오늘 걸로 채워져있다. \nepisode 3's push - 에피소드 3 홍보 푸\nrepromote - 다시 홍보\nHeaven Media - 숏폼 제작 업체 이름\nramp up - 강화하다\nFBX - 3D 모델 파일 형식\nVtuber file - 버튜버 파일 \nsend codes about a week out from the release - 출시 1주일 전 코드 전송\nlookback series - 회고 시리즈\nAnthomnia - 크리에이터 이름\nit just so happens - 우연히\n시각자료 - visual materials\ntidbits - 소소한 정보\n지면 - placement, coverage\ncredible and reputable - 신뢰할 수 있고 평판이 좋은\nSprout Social - 소셜미디어 관리 툴\nstatic assets - 스태틱/정적 애셋\ngot the best interactions - 반응이 제일 좋은\ncampaign performance - 캠페인 성과\nSRT file - 자막 파일 형식\ntalking head video - 토킹 헤드 영상(사람이 카메라 앞에서 말하는 영상)\nfair enough - 그럴만하다. 납득가능하다.\nad cards - 광고카드\nNatural selection 2 - 게임이름",
+            "memo": "",
+            "tags": [
+                  "SN2"
+            ]
+      },
+      {
+            "id": "moc8bctsmuxn",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-04-24",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "SN2",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "SN2",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 30,
+            "prepMinutes": "",
+            "difficulty": 7,
+            "score1": 3,
+            "score2": 4,
+            "score3": 4,
+            "rating": 2,
+            "participants": "",
+            "summary": "포기하지 않았다. 머리가 어제부터 회복이 안되어서 쥐 날 것 같은 기분.",
+            "issues": "I understand the need to move the finance stuff. It's just a matter of how i think he might even have to initialize that or something, so.. for Steam anyway. \nfinance 때문에 변경이 필요하다는걸 저는 이해하지만 Ted님이 그걸 어떻게 하셔야할거에요. steam쪽도 어짜피 테드님이 하셔야하고..\n\nGBD팀\n\nAll of the development side things that need to happen to enable this, we’re already in compliance with. We support the cloud gaming, and we support cross-plan devices and all that stuff, so.. I did talk with Xbox at GCD about Gen 10, and they did say they were still a little ways out from disclosing, but I think they said they were disclosing Krafton in the next month or so. On some of the details with that. I might be mistaken. But I’m pretty sure that’s what they had said, so.. but they also said it’s very similar to what they’re doing with the Rog Ally. The games are headed more into a PC base, and so if you’re already building for Win PC, you’re basically building for Gen 10. And if that’s the case, then I don’t see that as a very high risk, and I think we would obviously want to support the launch console on Xbox when it did come, you know, when it did get released with SN2, so I don’t see this as a high risk, and as you point out, the revenue gain is significant and should be an easy win for everybody, so yeah. Agreed. We should move forward with this. \n구현을 위한 개발 측면 요구사항은 이미 충족하고 있음. 클라우드 게이밍, 크로스 플랫폼 기기 등을 지원하고 있음. GDC에서 Xbox와 Gen10 관련 얘기 했는데, 아직 공개까지는 시간이 좀 남았다고 했음. 근데 한 달 내외로 크래프톤에 일부 내용 공유할 예정이라고 들었다. 그리고 Rog Ally에서 하고 있는 방식과 매우 유사하다고 했다. 게임들이 점점 pc기반으로 가고 있어서 이미 windows PC 용으로 개발하고 있다면 사실상 Gen10 용으로 개발하고 있는 셈이라고. 그래서 리스크가 크다고 보지 않음. 그리고 xbox 차세대 콘솔이 출시되면 당연히 지원하고 싶을 것. 그래서 리스크가 크지 않다고 생각. 그리고 말씀하셨듯 수익 증가 효과도 크기때문에 모두에게 좋은 기회가 될 거라고 생각. \n*실제 통역: 실제 통역: 네 괜찮은 것 같아요. 지금 개발 쪽은 이미 저희가 클라우드 게임이이나 크로스 플레이 devices 이런거 다 지원하고 있기 때문에 잘 맞고 있다고 생각하고요. GC..GDC와 Gen10관련해서 얘기를 했는데 Xbox 쪽에서 크래프톤에 아마 다음달쯤 디테일을 공개할 거라고 했거든요. 틀릴 수도 있지만. 근데 어쨌든 PC 기반의 아키텍처로 갈거고 그래서 PC 기반으로 이미 빌딩을 하고 있으면 Gen10은 문제가 없을거고… 그리고 SN2 런칭했을 때 크게 문제가 없을거라고 저도 알고 있기 때문에 이게 큰 위험 요소라고 생각을 하지 않습니다. 그래서 저는 이거와 그대로 진행하는거 동의합니다. \n--> 중요한 포인트 일부 누락\n빠진 핵심\n❌ “ROG Ally 비교” → 매우 중요한 비유\n❌ 차세대 콘솔 지원 내용\n❌ “revenue gain is significant” → 돈 얘기 빠짐",
+            "followUp": "톤: 괜찮은 것 같아요 -> 문제 없습니다. 리스크 낮습니다.\n구조: 논리 흐름 유지 <- 화자의 논리 흐름을 따라가는 연습 필요. \n완성도: 누락되는 내용",
+            "terms": "Rog Ally - ASUS가 만든 PC 기반 휴대용 게임\ncompliance with - 충족하다, 준수하다, 따르다",
+            "memo": "",
+            "tags": [
+                  "SN2"
+            ]
+      },
+      {
+            "id": "moi8vxt53vy1",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-04-28",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "Astro Arena Biz/MKT Weekly Meeting",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "AstroArena",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 60,
+            "prepMinutes": "",
+            "difficulty": 3,
+            "score1": 2,
+            "score2": 3,
+            "score3": 1,
+            "rating": 2,
+            "participants": "",
+            "summary": "통역실 문제가 있어서 자리를 아예 옮긴것..",
+            "issues": "기술적인 문제로 제대로 통역을 하지 못함.",
+            "followUp": "이어폰 여유분을 챙겨야할 듯.\n\n높은 단가라는 것은 유저 많고 광고 효과가 좋아서 광고주가 더 비싸게라도 그 inventory를 사고 싶어한다는 뜻. \n변동형 variable: 광고 많이 보면 돈 많이 받음\n고정형 fixed: 정액 요금\n자체 네트워크로 처리한다 = 외부 도움 없이 광고를 처리한다. \n좋은 자리는 높은 단가로 팔 수 있다.\n\n* 유저가 페이지/앱 하나 열 때마다 대략 이런 순서가 100ms 안에 돌아감:\n1. User → Publisher\n- 유저가 뉴스 사이트나 앱 화면을 연다.\n- 페이지에 “광고 자리 하나 비어 있음”.\n2. Publisher → Ad Server / SSP\n- 퍼블리셔의 Ad Server/SSP가\n“여기 300×250 배너, 이런 유저(쿠키·ID·위치·디바이스)인데 살 사람?”라고 SSP에 인벤토리+유저 정보를 넘김.\n3. SSP → Ad Exchange\nSSP는 이 노출 기회를 Ad Exchange에 올려서 경매 시작. 동시에 여러 Ad Exchange·DSP·Ad Network에 뿌려서 제일 비싼 놈 찾으려 함. \n4. Ad Exchange → 여러 DSP\nAd Exchange는 연결된 여러 DSP에게 “이 슬롯, 이 유저, 입찰할래?” 하고 요청. \n5. 각 DSP 내부에서 하는 일\nDSP는 광고주 캠페인 설정 + DMP·퍼스트파티 데이터로 “이 유저가 우리 타겟인가?” “이 노출에 최대 얼마까지 낼 가치가 있나?” 분석\n그 결과로 입찰가(bid price) + 광고 크리에이티브를 Ad Exchange에 응답.\n6. Ad Exchange에서 경매 / 낙찰\n- Ad Exchange가 가장 높은 유효 입찰가를 고르고 낙찰자 결정\n- 2nd-price, 1st-price 등 경매 모델로 실제 지불가를 계산\n7. 광고 송출\n- 낙찰된 DSP → SSP/Ad Server로 광고 태그 전달\n- 퍼블리셔 페이지에 최종 광고 노출\n=>이 모든 게 페이지 한 번 띄울 때마다, 100ms 이내에 계속 반복.",
+            "terms": "광고 물량 - ad volume\n자체 네트워크로 물량을 처리합니다 - We fulfill demand through our own network.\n그래서 더 높은 단가를 받을 수 있습니다 - We can command higher CPMs.\n광고주 - advertiser\n플랫폼/매체 - publisher\nAd network/Platform - 중간역할\nad inventory - 광고 자리\nimpressions - 노출 수\nWe have high impression volume. - 물량이 많다\nDSP - demand side platform 광고주 편 에이전트\nSSP - supply side platform 퍼블리셔 편 에이전트\nAd Exchange - 여러 SSP와 여러 DSP가 연결된 경매장. 한 노출마다 입찰 붙여서 누가 얼마에 사는지 가격/낙찰 결정\nARPPDAU",
+            "memo": "",
+            "tags": [
+                  "AstroArena"
+            ]
+      },
+      {
+            "id": "moi95o0jap6d",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-04-28",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "[Daily Scrum] Physical AI 한영만!!",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "AI",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 30,
+            "prepMinutes": "",
+            "difficulty": 6,
+            "score1": 3,
+            "score2": 2,
+            "score3": 2,
+            "rating": 2,
+            "participants": "",
+            "summary": "수음이 너무 안좋았음.\n통역실 오디오 퀄리티, 회의실에서 들어오는 오디오 퀄리티",
+            "issues": "무슨말인지 모르겠는데 소리까지 잘 안들리니까 커버리지가 거의 제로...",
+            "followUp": "안들리면 안들린다고, 안보이면 안보인다고 말해야겠음. !0!",
+            "terms": "Unitree G1이라는 로봇용으로 만든 “이해하고 행동을 만드는 AI 구조”를 Agibot G1 로봇에도 적용해보겠다는 뜻입니다.\nThey are trying to use the AI structure built for the Unitree G1 robot and apply it to the Agibot G1 robot.\n\nTrained PSA → P, but since the data was corrupted, stopped it and retrained P.\nPSA를 학습해서 P로 전환했으나, 데이터가 손상되어 중단하고 P를 다시 학습했습니다.\n\n→ 쉽게 말하면 / In simple terms:\nPSA라는 데이터/모델/단계에서 P라는 형태로 학습을 진행하려 했지만, 사용한 데이터에 문제가 있어서 그 실험을 멈추고 P만 다시 학습했다는 뜻입니다.\nThey tried to train from PSA into P, but the data had issues, so they stopped that run and retrained P separately.\n\nAdd scene info to eval logs.\n평가 로그에 scene 정보를 추가합니다.\n\n바구니가 있는 장면 - a scene with a basket\n물체를 집는 장면 - a pick-up scene\n로봇 팔이 충돌하는 장면 - a scene where the robot arm collides\n데이터 손상 - corrupted data\n학습 한차례 돌리다 - run a round of training/do one training run",
+            "memo": "",
+            "tags": [
+                  "AI"
+            ]
+      },
+      {
+            "id": "moi98qpd4eal",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-04-28",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "KCN x Astro Arena 마케팅 미팅",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 60,
+            "prepMinutes": "",
+            "difficulty": 7,
+            "score1": 3,
+            "score2": 4,
+            "score3": 4,
+            "rating": 4,
+            "participants": "",
+            "summary": "잭님 속도를 온라인에서 이제 어느정도 따라잡았음.",
+            "issues": "여전히 블랙아웃되는 부분이 있음.",
+            "followUp": "잭님 말은 캡션을 안보는게 더 나음. 잭님과 연동되어야함.",
+            "terms": "",
+            "memo": "",
+            "tags": []
+      },
+      {
+            "id": "mojijdcj465w",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-04-29",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "SN2 | UW Comms <> PD2 Community (recurring)",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "SN2",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 60,
+            "prepMinutes": "",
+            "difficulty": 8,
+            "score1": 4,
+            "score2": 4,
+            "score3": 4,
+            "rating": 4,
+            "participants": "",
+            "summary": "최대한 따라가려고 노력했다. 그리고 8-90%정도는 잘 따라가고 있다.",
+            "issues": "what we have requested that they do is take the spirit of the briefs and offer alternative suggestions for how they can make that match the kind of vibe of the channel as well because the TikTok is kind of.. except for a handful of videos like our trailers and like promoting official videos that go onto our long-form channels, it's kind of almost intended to be the weird middle child of all our social platforms. So we kind of intent it to be a little bit quirky, a little bit offbeat. So we've asked them to take the spirit of the briefs and like come up with an idea of how to make that work with the kind of theme of the tiktok channel. \n그래서 저희가 요청드린건요.. 그 브리프를 한 번 보고 그.. 거기에서 할 수 없는 것들 그리고 또 채널의 바이브들을 어떻게 맞출 수 있는지 그런 대안을 마련해주십사 하고 요청을 드렸습니다. 왜냐면 .. 그.. 롱폼 채널로 가게되면 게.. 살짝.. 그 바이브가 안맞을 수도 있고 그래서 제가 헤븐미디어 쪽에 그 브리프들을 한 번 보고 틱톡의 그런 테마를 어떻게 잘 매칭을 하면서 할 수 있을지 아이디에이션을 할 수 있도록 요청을 드렸습니다. 그래서 아마 다음 회의 때 그거를 좀 더 논의를 할 수 있을 것 같아요. 헤븐미디어 쪽에서도 몇 가지 질문이 있다고 하셨거든요. 그래서 그것도 좀 다룰 수 있을 것 같고요. 그래서 채널 관련해서 거기 캐파랑 더 맞게 이런 할 수 업무를 할 수 있도록 그쪽에서 논의를 하고 싶다고 하셨습니다. \n--> 기존 브리프의 취지를 유지하면서도 채널의 분위기에 맞게 대안을 제안해달라고 요청했다. 틱톡 채널은 일부 영상, 트레일러나 공식 롱폼 콘텐츠 홍보 영상을 제외하면 저희 소셜 플랫폼들 중ㅇ에서 약간 애매한 중간 포지션 같은 성격을 갖고 있다. 그래서 이 채널은 조금 더 독특하고 엉뚱한 느낌으로 운영해왔다. 그래서 브리프의 핵심 취지를 살리되, 틱톡 채널의 톤앤매너에 맞게 구현할 수 있는 아이디어를 제안해달라고 요청해놓은 상태다. \n\nRichard has emailed me since, and he is trying to get them out as soon as possible but it looks like we are going to be slightly delayed. I don't have an ETA on controllers, but he says he's trying tos hip them very very soon. i know that we're planning on having these controllers be used for giveaways for various things. it just depends on if we're comfortable going ahead with that. \n그래서 리처드님이 저에게 이메일을 보냈는데 그걸 최대한 빨리 해결하려고 하고 있다 라고 하는데 어쩔 수 없이 좀 지연이 있을 것 같아요. 아직 정확히 언제까지 쉬핑이 될거다 라고는 말씀을 안해주셨는데, 미정이긴 한데 먼 미래는 아닐 거에요. 근데 저희가 이 컨트롤러를 다양한 이벤트의 기브어웨이로 사용될거라고 알고 있는데, 근데 이게 살짝 약간 문제가 있을 수도 있다는 점. \n-> 리차드님이 이후에 이메일을 보내왔는데, 가능한 한 빨리 발송하려고 하고 있지만 약간 지연이 발생할 것으로 보입니다. 컨트롤러에 대한 eta는 아직 없지만, 최대한 빠르게 배송하려고 노력중이라고 합니다. 저희가 이 컨트롤러를 여러 용도의 경품으로 활용할 계획인건 알고 있는데, 이 부분은 그대로 진행해도 괜찮을지에 달려 있습니다.\nwe've been trying to shepherd that trailer video asset along, but it has now been Richard has now said that there's a CTA that needs to be on the end of this trailer. Also, we don't have visibility on the intent of this trailer for the controller, because it's not just the controller, it's the stand for the controller as well, this trailer.\n그래서 저희가 그.. 트레일러 비디오 에셋을 관리하고 있는데 리차드님 말에 따르면 그 트레일러 말미에 그 CTA가 있다고 해요. 그리고 리차드님이 그 트레일러의 목적에 대한 비저빌리티가 없으시고 컨트롤러 뿐만이 아니라 스탠드에 대한 것도 없으시다고 해요. \n-> 트레일러 영상 에셋을 관리하고 있는데, 라치드님 쪽에서 이 트레일러 말미에 CTA가 들어가야 한다고 하세요. 또 이 트레일러의 목적에 대해서도 현재 비저빌리티가 없는 상황입니다. 이 영상이 단순히 컨트롤러만이 아니라 컨트롤러 스탠드까지 함께 홍보하는 내용이기 때문에.",
+            "followUp": "문장을 끊어서 가야함!! 처리하다가 뒤에걸 못듣고 문장 구조를 놓쳐서 맥락을 중간에 놓치는 문제가 자주 발생. \n\ntake the spirit of the briefs and offer alternative suggestions for how they can make that match the kind of vibe of the channel \n=> 브리프의 취지를 유지한 채 대안은 어떤 것들이 있을지 제안해달라고 요청드렸어요. 채널의 바이브에 더 매칭될 수 있게요. \n\nhe's trying to get them out as soon as possible but it looks like we are going to be slightly delayed. \n=> 최대한 노력은 하고 계시는데 지연은 될 것 같아요. \nit just depends on if we're comfortable going ahead with that. \n=> 이런 상황도 우리가 괜찮은지에 달려있어요.\nbecause it's not just the controller, it's the stand for the controller as well, this trailer\n=> 왜냐면 이게 컨트롤러 뿐만이 아니라 스탠드도 트레일러에 포함이 되어있어서요.",
+            "terms": "shepherd - 가이드/관리하다\ngloat - 우쭐대다, 자랑하다, 재수없게말하다 \noffbeat - 독특한, 다른 것과는 다른\nquirky - 개성있는\nretainer contract - 자문계약/고정계약 (매번 계약하는 것이 아닌 매달 돈 주고 계속 도움 받음)\nwork for hire - 용역 제작 (결과물 소유권이 의뢰자에게 있음)",
+            "memo": "",
+            "tags": [
+                  "SN2"
+            ]
+      },
+      {
+            "id": "mojt5l1nvatt",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-04-29",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "[K-PJT] Kinzo 주간 회의",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "K-PJT",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 60,
+            "prepMinutes": "",
+            "difficulty": 4,
+            "score1": 3,
+            "score2": 3,
+            "score3": 3,
+            "rating": 4,
+            "participants": "",
+            "summary": "모르겠음ㅋㅋ 따라가려고 최선을 다했음.",
+            "issues": "So I would like to propose a solution that I think it looks quite good as well. And it would be that we use the titles with the gradient direction which is offered.\n그래서 제가 보기에도 꽤 괜찮아 보이는 해결책을 제안해 드리고 싶습니다. 그 해결책은 바로 현재 제공되는 그라데이션 방향 그대로 타일을 사용하는 것입니다.\nKI\nKINZO (EN)\n16:53\nAnd instead of attempting a curved gradient going around curved objects we lay out the gradient tiles in a pixelated manner following the curve. And so you don't get this firm shaped gradient but you get a pixelated gradient which follows our shapes and I think that can still have quite a nice impact and even have this video game-y pixelated impression.\n그리고 곡선형 물체를 따라 곡선 그라데이션을 시도하는 대신, 곡선을 따라 픽셀 단위로 그라데이션 타일을 배치하는 것입니다. 그렇게 하면 딱딱한 형태의 그라데이션은 나오지 않지만, 우리의 형태를 따라가는 픽셀화된 그라데이션이 나오게 되며, 이는 여전히 꽤 멋진 효과를 낼 뿐만 아니라 비디오 게임 같은 픽셀화된 느낌을 줄 수도 있다고 생각합니다.\nKI\nKINZO (EN)\n16:53\nOn the floor and I mean an advantage of this execution as well will be that we're not dealing with we wouldn't have to be dealing with many different custom printed tiles that would have taken to achieve the other approach so I think it's something that can work quite well Is there comments on that?\n또한 이 방식의 장점은, 다른 방식을 구현하기 위해 필요했을 수많은 맞춤형 인쇄 타일을 다룰 필요가 없다는 점입니다. 따라서 이 방법은 꽤 잘 작동할 수 있을 것이라 생각합니다. 이에 대해 의견이 있으신가요?\nKI\nKINZO (EN)\n16:54\nOtherwise I will explain the second flooring update. The WC-Devil update comment, well, they will do for you at the end.\n그렇지 않다면 두 번째 바닥 마감 업데이트에 대해 설명드리겠습니다. WC-Devil 업데이트에 대한 의견은, 음, 마지막에 다뤄드리겠습니다.\nKI\nKINZO (EN)\n16:54\nI think it's totally perfect. Okay.\n전 완전히 완벽하다고 생각합니다. 네.\nKI\nKINZO (EN)\n16:54\nSo the second update is regarding there was a question in the last Florian update about how do we solve Florian transitions between porcelain tile and carpet tile when we have a curved transition. So coming out of the course.\n두 번째 업데이트는 지난 플로리안 업데이트에서 제기된 질문과 관련이 있습니다. 곡선형 전환부가 있을 때 도기 타일과 카펫 타일 사이의 플로리안 전환을 어떻게 해결할지에 대한 질문이었습니다. 그래서 코스를 벗어나면서...\nKI\nKINZO (EN)\n16:55\nAnd what we propose here is a metal transfer strip similar to what we've been using in other flooring transition details. But there are flexible products on the market which allow themselves to be curved.\n그리고 여기서 제안하는 것은 다른 바닥재 이음새 디테일에서 사용해 온 것과 유사한 금속 이음판입니다. 하지만 시중에는 곡선 형태로 구부릴 수 있는 유연한 제품들도 있습니다.\nKI\nKINZO (EN)\n16:55\nSo this is what we would propose to solve those moments on the Floor Foodish plan.\n그래서 이것이 바로 Floor Foodish 플랜에서 이러한 부분을 해결하기 위해 제안하는 방안입니다.\nKE\nKINZO // Eliana (PL)\n16:55\nOkay, and I will then continue with the last topic, but if you can stop sharing, thank you. So I I guess you see my screen by now.\n네, 그럼 마지막 주제로 넘어가겠습니다만, 공유는 잠시 멈춰 주시면 감사하겠습니다. 자, 이제 제 화면이 보이시겠죠.\nKE\nKINZO // Eliana (PL)\n16:55\nAnd I wanted just to give a small update. It's mostly for related to the documentation package.\n그리고 간단한 업데이트를 드리고 싶었습니다. 주로 문서화 패키지와 관련된 내용입니다.\nKE\nKINZO // Eliana (PL)\n16:55\nAnd the world details. So probably more interesting for cookbook.\n그리고 월드 디테일 부분도요. 아마 쿡북을 사용하시는 분들께 더 흥미로울 것 같습니다.\nKE\nKINZO // Eliana (PL)\n16:55\nSo in the upper part we see how we represented the world details for the PUBG submission. And we based this strategy on some documents that we received back then when we planned PUBG's virtual offices.\n위쪽 부분에서는 PUBG 제출물을 위해 월드 디테일을 어떻게 표현했는지 볼 수 있습니다. 이 전략은 우리가 PUBG의 가상 사무실을 기획할 당시 받았던 몇 가지 문서를 바탕으로 수립했습니다.\nKE\nKINZO // Eliana (PL)\n16:56\nIn this case, we were considering so when we had one wall with two finishes on each side for us this was a package and this package got a code we Started with the same approach for the craft and floors but We noticed that this was bringing so and for PUBG with this With this strategy we reach like I don't know 15 Codes so 15 details and we thought it was a good amount to communicate all the information for the wool materials. But not creating to many details that could bring to confusion.\n이 경우, 한쪽 벽면에 양면 마감재가 적용된 상황을 고려했을 때, 우리는 이를 하나의 패키지로 간주했고 이 패키지에 코드를 부여했습니다. 우리는 크래프트와 바닥재에 대해서도 동일한 접근 방식을 적용하기 시작했지만, 이 방식이 문제를 일으킨다는 것을 깨달았습니다. PUBG의 경우 이 전략을 적용했을 때, 대략 15개의 코드, 즉 15가지 세부 사항이 나왔는데, 우리는 이것이 울 소재에 대한 모든 정보를 전달하기에 적절한 양이라고 생각했습니다. 하지만 혼란을 초래할 수 있는 지나치게 많은 디테일을 만들지는 않았습니다.\nKE\nKINZO // Eliana (PL)\n16:57\nWhile we were doing this exercise with the craft on floors that are many more floors and have many more walls, we're noticed that we were going into what are special direction. That was bringing us to have like 45 or 50 of these little packages so that we decided instead for crafting floors not to indicate the complete package but just the finish on each side.\n바닥과 벽면 장식을 다루는 이 작업을 진행하면서, 바닥은 훨씬 더 많고 벽면도 훨씬 더 많은 상황에서 우리가 특별한 방향으로 나아가고 있다는 것을 깨달았습니다. 그렇게 하면 이런 작은 패키지들이 45개나 50개나 생겨버릴 것 같아서, 바닥 제작 시에는 전체 패키지를 표시하지 않고 각 면의 마감 처리만 표시하기로 결정했습니다.\nKE\nKINZO // Eliana (PL)\n16:57\nIn this way we see the comparison for example for the corner meeting rooms that will be much more simple so we will have one code for example a wall that has a dark paneling surface and another code for the opposite wall that has a whiteboard surface. We think that with this method we know that we are a bit changing the way to communicate the information.\n이렇게 하면, 예를 들어 모서리에 위치한 회의실의 경우 훨씬 더 단순해질 것입니다. 따라서 어두운 패널 마감 표면을 가진 벽에는 하나의 코드를, 화이트보드 표면을 가진 반대쪽 벽에는 또 다른 코드를 할당하게 될 것입니다. 우리는 이 방법을 통해 정보를 전달하는 방식을 다소 변경하고 있다는 점을 인지하고 있습니다.\nKE\nKINZO // Eliana (PL)\n16:58\nBut we feel that it's clearer and it brings to less problems when it comes to create so many little packages for different walls when they are placed for different surfaces when they are placed on different sides of the walls. So it was just to let you know in advance about this trend.\n하지만 벽의 서로 다른 면에 배치되어 서로 다른 표면을 가질 때, 다양한 벽을 위한 수많은 작은 패키지를 생성해야 하는 상황에서 이 방식이 더 명확하고 문제를 덜 일으킨다고 생각합니다. 이 변화의 방향에 대해 미리 알려드리고자 합니다.",
+            "followUp": "",
+            "terms": "escape route - 피난 동선\nfire escape - 비상구\nloose furniture - 이동식 가구\nfinisher - 마감, 마감재\nseating - 착석공간\nplanter - 화분\nsuspended cable - 매립형 케이블\ncurved - 곡선형\ntranslucency - 반투명도\nopaque - 불투명\nfixture - 고정 설치물\ngranular - composed of small grains/particles/granules, often having a rough/gritty texture\nmonotonous - 단조로운",
+            "memo": "",
+            "tags": [
+                  "K-PJT"
+            ]
+      },
+      {
+            "id": "mottqsihfkdd",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-05-06",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "AIT-Legal recurring sync call",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "Legal",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 30,
+            "prepMinutes": "",
+            "difficulty": 7,
+            "score1": 5,
+            "score2": 5,
+            "score3": 5,
+            "rating": 5,
+            "participants": "",
+            "summary": "블랙아웃 현상은 겪지 않았음",
+            "issues": "누락이 생김.",
+            "followUp": "",
+            "terms": "DRI - 담당자",
+            "memo": "",
+            "tags": [
+                  "Legal"
+            ]
+      },
+      {
+            "id": "mouxlmwonoc9",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-05-07",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "[SN2] Weekly Dev <> Publishing",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "SN2",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 45,
+            "prepMinutes": "",
+            "difficulty": 6,
+            "score1": 4,
+            "score2": 4,
+            "score3": 3,
+            "rating": 4,
+            "participants": "",
+            "summary": "그냥 보통",
+            "issues": "At the end of the day, it’s easy for us to say we want this product or this product, it doesn’t matter to MS. But what they can’t do is it sounds like without great difficulty, they can’t enable it for a short amount of time and then remove it and back grant it to anyone who should have had it or had it at some point. And to you rpoint, you know they didn’t pay that much. So it would be too much work to back grant it to them.\n결국 저희 입장에서는 “이 상품을 넣을지, 저 상품을 넣을지” 결정하는 건 어렵지 않고, MS 입장에서도 큰 문제는 아닙니다. 하지만 MS 측 설명에 따르면, 상당한 어려움 없이 단기간만 entitlement를 제공했다가 다시 제거하고, 이후 entitlement를 받아야 했던 사람들에게 소급 적용(back grant)하는 작업은 사실상 어렵다고 합니다. 그리고 말씀하신 것처럼, 게임패스 이용자들은 상대적으로 적은 비용만 지불한 상황이기 때문에, 그런 유저들에게 일일이 entitlement를 소급 지급하는 것은 너무 많은 작업이 필요하게 됩니다.",
+            "followUp": "",
+            "terms": "back grant - 소급 지급, 사후 지급, 추후 entitlement 부여",
+            "memo": "",
+            "tags": [
+                  "SN2"
+            ]
+      },
+      {
+            "id": "mp1yx1ovh05x",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-05-12",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "[SN2] War Room Set-up Related Meeting",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "SN2",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 60,
+            "prepMinutes": "",
+            "difficulty": 5,
+            "score1": 3,
+            "score2": 5,
+            "score3": 5,
+            "rating": 5,
+            "participants": "",
+            "summary": "한->영 할 때 조금 뒤에서 따라가니까 오히려 경제적으로 말할 수 있음",
+            "issues": "영한에서 놓치는 내용, 바로 파악이 안돼서 잘못말한 내용 있음.\n\nSo the game feedback tool is meant to be a heat map, and then from there, we can drill into the types of issues that are being reported. I know that we had something like that for the playtest, for Playtest 10, we had that. i haven't seent it yet on ea dashboard. but that would be the intent for it. \nthe game survey tool, we checked this week, we're not going to have a survey for launch. we will roll one out in the following week, just so that we don't distract from the newsfeed where we put any kind of critical messaging at the start. and we want to make sure that whenever that comes through, we have a dashboard that we can view those responses as well. so right now, i don't think they are part of the ea dashboard, but the intention with these read to be confirmed boxes, is that those would appear as part of the game dashboard, databricks, dashboard. \n원래 히트맵으로 되어있었고 거기에서 리포트되는 이슈들을 유형별로 나눌 수 있는걸로 알고 있거든요. 근데 플레이테스트 10 때는 그런게 있었던 걸로 알고 있는데 ea 대시보드에는 제가 그걸 확인을 못했어서 엠마님과 한번더 확인해야합니다. 어쨌든 포함되는게 저희 계획이고. 게임서베이툴같은 경우 이번주 더블체크할거긴 한데 론칭때는 서베이가 없을거고 다음주 롤아웃때 포함시킬 예정입니다. 그래서 처음부터 약간 그 뉴스피드가 약간 큰 문제가 없게 지나갈 수 있게 하는게 목적이고요. 그래서 ea대시보드에는 포함이 안되어 있지만 약간 그 빨간색으로 컨펌드박스로 게임대시보드에 나타나게 되는걸로 알고 있습니다. \n--> 게임 피드백 툴은 히트맵 형태로 제공되고, 거기서 보고된 이슈를 유형별로 드릴다운해서 볼 수 있게 하는 게 의도입니다. 플레이테스트 10 때는 비슷한 기능이 있었던 것으로 아는데, EA 대시보드에서는 아직 확인하지 못했습니다.\n게임 서베이 툴은 이번 주 확인 결과, 론칭 시점에는 설문을 운영하지 않고 다음 주에 롤아웃할 예정입니다. 초반에는 뉴스피드의 중요 메시지가 묻히지 않도록 하기 위해서입니다. 설문이 시작되면 응답을 확인할 수 있는 대시보드도 필요하고, 현재 EA 대시보드에는 포함되어 있지 않지만 TBC로 표시된 항목들이 게임/Databricks 대시보드에 표시되는 방향으로 이해하고 있습니다.\n\nLet's use the time that we have to walk through that and see if there's anything else.  -  내용을 같이 한번 살펴보고, 추가로 확인할 게 있는지 보시죠.\n\nlet's have a quick standup after lunch. 점심 먹고 짧게 회의 한번 하자.",
+            "followUp": "자막을 잘 안보이는 곳으로 치워야지....",
+            "terms": "triage - 분류하다, 우선순위를 매기다, 1차 검토하다\nheat map - 히트맵\nrunbook - 런북, 대응 매뉴얼, 운영 매뉴얼\ndaily standup - 매일 하는 짧은 회의",
+            "memo": "",
+            "tags": [
+                  "SN2"
+            ]
+      },
+      {
+            "id": "mp52hqp605ky",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-05-14",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "[SN2] Weekly Dev <> Publishing",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 60,
+            "prepMinutes": "",
+            "difficulty": 6,
+            "score1": 4,
+            "score2": 5,
+            "score3": 5,
+            "rating": 5,
+            "participants": "",
+            "summary": "영한이 이전보다는 조금 나아졌다.",
+            "issues": "특정 부분이 아예 누락되었음. \n\n필러 문제..\n영어: like\n한국어: 저희가 \n\nmost of the players -> most of the fixes라고 들음....\n\nThe first step is we need the current build in certification to pass. and we will push that out to players. at that point, everybody is on the same version. if they no longer need the dlc and then it's up to us to what do we want to do on the storefront. when do we want to make that change for players. anytime upto the 25th right now, automatically, it will flip over on the 25th. if we want to do it sooner, once the build.. the new build is out on Xbox, then we could do it any time before the 25th. \n--> 여기에서 뒷 부분은 아예 놓침... 자막을 봐서 그럼. 그냥 들으면 이해되는데... \n\nbut just keep in mind that there's a certification factor involved for even if we make the change to pull the base game release forward and the retiring of the bundle forward. We're still going to look. we'll be looking at a minimum of two hours, i would think, to get that change live to players. and that's being pretty optimistic. so we do need to consider the timeline when we decide to do it. \n--> 첫 문장 날리고 두 시간은 필요할거다 라는건데 두 시간은 라이브가 될거다 라고 잘못 통역...",
+            "followUp": "지금 저희가 또 다른 수정 작업 세트를 진행 중인데요, 주로 PC 쪽입니다. 최근 불법 복제본에서 발생하기 시작한 크래시들을 기반으로 대응하고 있습니다.\n다만 여기에는 false signal도 굉장히 많습니다. 실제 문제라기보다는 게임 복사본 자체가 불완전해서 에셋이 누락돼 있다거나 하는 경우가 많아서 노이즈가 꽤 생기고 있습니다.\n그래도 GPU 크래시 같은 그래픽 관련 문제는 실제로 확인되고 있어서, 그 부분 수정 작업도 이미 시작한 상태입니다.\n\n현재 testing manual 브랜치에는 이전 day one patch 버전이 올라가 있고요.\n반면 release manual preview, experimental, default 브랜치는 모두 EA0 빌드와 day one patch part 2까지 최신 상태로 업데이트되어 있습니다.\n\n즉, day one patch는 크게 두 개의 빌드로 구성돼 있다고 보시면 됩니다.\n빌드 넘버 1과 빌드 넘버 2입니다.\n\n현재 Epic Store 쪽은 어떤 sandbox에도 빌드가 올라가 있지 않습니다.\n지금은 모든 sandbox에 stub package만 들어가 있는 상태고요.\n\n계획상으로는 출시 30분 전에 day one part 2 빌드를 Epic live sandbox로 이동시키려고 합니다.\n아직도 빌드가 외부로 나가는 부분에 대해서는 조금 조심스럽게 보고 있기 때문입니다.\n\nXbox 쪽 상황도 다시 한번 명확히 말씀드리면, 출시 전에 총 세 개의 빌드를 퍼블리시하게 될 예정입니다.\nEA0, Gold Master Build, 그리고 Day One Part 1, Day One Part 2까지입니다.\n\n번들 관련 pricing과 availability는 이미 퍼블리시된 상태입니다.\n그리고 저희가 스토어에서 번들을 내리고 싶을 때는 그 시점에 맞춰 변경 사항을 다시 퍼블리시할 수 있습니다.\n\n예를 들어 내일 Part 2 패치가 라이브된다면, 원한다면 그 시점에서 번들을 스토어에서 내릴 수도 있습니다.\n다만 edition picker 쪽에서 약간 혼선이 생길 수 있다는 건 알고 있어서, 이 타이밍은 그룹 차원에서 같이 결정해야 할 것 같습니다.\n\n우선 첫 번째 단계는 현재 certification에 들어가 있는 빌드가 통과해야 합니다.\n그 이후 플레이어들에게 배포하게 되고요.\n그 시점이 되면 모든 유저가 동일한 버전을 사용하게 됩니다.\n\n그렇게 되면 더 이상 DLC가 필요 없어질 수도 있고, 이후에는 storefront를 어떻게 운영할지 저희가 결정하면 됩니다.\n플레이어 대상으로 언제 변경을 적용할지 결정하면 되는 거죠.\n\n현재 기준으로는 25일에 자동으로 전환되게 되어 있습니다.\n다만 Xbox에서 새 빌드가 배포된 이후라면, 원한다면 25일 이전 어느 시점이든 미리 변경 적용도 가능합니다.\n\n한국어로 최대한 익혀놓는 것이 필요하겠음............",
+            "terms": "GDK (game development kit) - 마이크로소프트가 Xbox 콘솔과 Windows PC용 게임 개발을 위해 제공하는 통합 개발 키트\ncauses confusion - 혼선이 있을 수 있다",
+            "memo": "",
+            "tags": []
+      },
+      {
+            "id": "mpevppekf7qg",
+            "createdAt": "2026-06-15T12:32:01",
+            "updatedAt": "2026-06-15T12:32:01",
+            "date": "2026-05-21",
+            "status": "done",
+            "sessionType": "화상회의",
+            "project": "[SN2] Weekly Dev <> Publishing",
+            "client": "",
+            "requester": "",
+            "mode": "동시",
+            "languagePair": "EN↔KR",
+            "sourceLang": "",
+            "targetLang": "",
+            "domain": "",
+            "place": "",
+            "startTime": "",
+            "endTime": "",
+            "durationMinutes": 45,
+            "prepMinutes": "",
+            "difficulty": 8,
+            "score1": 4,
+            "score2": 3,
+            "score3": 4,
+            "rating": 4,
+            "participants": "",
+            "summary": "영한을 그래도 잘 따라갔다! 역시 자막을 안보는게 낫다",
+            "issues": "한영이 오히려 더 잘 안됐다.\n\n저희가 알고 있기로도, 만약 실제로 이러한 요청이 있었다면 퍼블리싱 디비전 쪽에서 먼저 관련 내용을 공유해주셨을 것이라고 생각하고 있습니다. 다만 저희가 전달받은 범위 내에서는 트래픽이나 SDK 관련 리스크에 대한 사전 공유는 없었던 상황이었습니다. 그래서 출시 이후에 “SDK 버전 문제였다”는 이야기가 나온 부분에 대해, 혹시 저희가 놓치고 있는 추가 정보가 있는지 더블체크 차원에서 확인드리고 싶었습니다. 말씀 주신 내용을 보니 현재 저희가 파악하고 있는 내용과 동일한 것 같아 확인해주셔서 감사합니다.\n\nAs far as we are aware, if there had actually been such a request, we assumed that the Publishing Division would have shared the related information with us in advance as well. However, based on what had been communicated to us, we had not received any prior notice regarding traffic- or SDK-related risks.\n\nThat is why, when the discussion later came up after launch that this might have been related to an SDK version issue, we wanted to double-check whether there might have been any additional information that we were missing on our side. From what you explained, it seems to be aligned with the information we already had, so thank you for confirming.\n\n--> alright. thank you for the confirmation. and you know if there were this kind of request before the launch, i think we should have known. but you know i'm like hearing here and there about the sdk thing so i just wanted to confirm with you. because you know like people mentioning the sdk update or anything that might cause unncecessary confusion, so i just wanted to confirm with you guys today. \n\n--> 개선안: Alright, thank you for the confirmation.\nAs far as we understood, if there had been this kind of request before launch, we believe it would have been shared with us as well.\nHowever, we’ve been hearing mentions of SDK-related issues here and there, so we just wanted to double-check with you directly today.\nSince people have been bringing up SDK updates and similar points, we wanted to make sure there wasn’t any misunderstanding or missing context on our side.\nOR Alright, thank you for confirming.\nFrom our understanding, if there had been this type of request before launch, we assume it would have been communicated to our side as well.\nWe’ve just been hearing some mentions regarding SDK updates and related concerns, so we wanted to check directly with you to avoid any unnecessary confusion or misunderstanding.",
+            "followUp": "",
+            "terms": "prerogative - 특권, 고유한 권한\nFOV - 시야각",
+            "memo": "",
+            "tags": []
+      }
+];
+    const state = {
+      entries: loadEntries(),
+      query: "",
+      modeFilter: "",
+      statusFilter: "",
+      fromFilter: "",
+      toFilter: "",
+      activeView: "logs"
+    };
+
+    const headerMap = {
+      date: ["date", "날짜", "일자", "통역일자", "작업일", "진행일"],
+      startTime: ["start", "starttime", "start time", "시작", "시작시간", "시작 시각", "from"],
+      endTime: ["end", "endtime", "end time", "종료", "종료시간", "종료 시각", "to"],
+      client: ["client", "team", "고객", "고객사", "클라이언트", "회사", "기관", "팀"],
+      project: ["project", "title", "subject", "제목", "건명", "프로젝트", "주제", "회의명", "행사명", "업무명"],
+      mode: ["mode", "type", "방식", "유형", "통역방식", "통역 방식", "통역유형"],
+      sessionType: ["session", "session type", "meeting type", "format", "회의형태", "회의 형태", "형태", "구분"],
+      sourceLang: ["source", "source language", "source lang", "출발어", "원문언어", "출발 언어"],
+      targetLang: ["target", "target language", "target lang", "도착어", "대상언어", "도착 언어"],
+      languagePair: ["language pair", "language", "lang", "언어", "언어쌍", "통역언어"],
+      domain: ["domain", "field", "category", "분야", "도메인", "카테고리"],
+      place: ["place", "location", "venue", "platform", "장소", "플랫폼"],
+      meetingLink: ["meeting link", "meeting room/call link", "call link", "zoom", "link", "미팅 링크", "미팅링크", "회의 링크"],
+      requester: ["requester", "pic", "owner", "담당자", "요청자"],
+      participants: ["participants", "attendee", "attendees", "참석자"],
+      prepMinutes: ["prep", "prep minutes", "준비", "준비시간", "준비 시간"],
+      durationMinutes: ["duration", "duration minutes", "minutes", "소요시간", "통역시간", "통역 시간"],
+      difficulty: ["difficulty", "난이도"],
+      score1: ["score1", "score 1", "평가1", "평가 1", "점수1", "점수 1"],
+      score2: ["score2", "score 2", "평가2", "평가 2", "점수2", "점수 2"],
+      score3: ["score3", "score 3", "평가3", "평가 3", "점수3", "점수 3"],
+      rating: ["rating", "score", "평가", "자체평가", "만족도"],
+      status: ["status", "상태"],
+      tags: ["tags", "tag", "태그", "키워드"],
+      summary: ["summary", "memo", "note", "notes", "내용", "요약", "메모", "기록", "회의내용", "잘한점", "잘한 점"],
+      terms: ["terms", "glossary", "term", "용어", "용어집"],
+      issues: ["issue", "issues", "problem", "이슈", "문제", "아쉬운점", "아쉬운 점"],
+      followUp: ["followup", "follow up", "follow-up", "todo", "후속", "후속조치", "할일", "개선", "개선안"],
+      memo: ["memo", "note", "메모", "비고", "목표"]
+    };
+
+    const statusLabels = {
+      draft: "초안",
+      done: "완료",
+      follow: "후속",
+      billed: "정산"
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setDefaultDate();
+      bindEvents();
+      render();
+      updateDuration();
+    });
+
+    function bindEvents() {
+      $("entryForm").addEventListener("submit", saveEntry);
+      $("newBtn").addEventListener("click", resetForm);
+      $("clearBtn").addEventListener("click", resetForm);
+      $("deleteCurrentBtn").addEventListener("click", deleteCurrentEntry);
+      $("exportBtn").addEventListener("click", () => downloadCsv(state.entries, "interpreter-log.csv"));
+      $("importBtn").addEventListener("click", openImport);
+      $("closeImportBtn").addEventListener("click", closeImport);
+      $("runImportBtn").addEventListener("click", importCsv);
+      $("downloadTemplateBtn").addEventListener("click", downloadTemplate);
+      $("csvFile").addEventListener("change", handleCsvFile);
+      $("calendarPaste").addEventListener("input", handleCalendarPaste);
+      $("calendarPaste").addEventListener("paste", () => window.setTimeout(handleCalendarPaste, 0));
+      $("startTime").addEventListener("input", updateDuration);
+      $("endTime").addEventListener("input", updateDuration);
+
+      document.querySelectorAll(".tab-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.activeView = button.dataset.view || "logs";
+          document.querySelectorAll(".tab-btn").forEach((item) => {
+            const active = item === button;
+            item.classList.toggle("active", active);
+            item.setAttribute("aria-selected", String(active));
+          });
+          renderTable();
+        });
+      });
+
+      ["searchInput", "modeFilter", "statusFilter", "fromFilter", "toFilter"].forEach((id) => {
+        $(id).addEventListener("input", () => {
+          state[id] = $(id).value;
+          renderTable();
+        });
+      });
+
+      $("importModal").addEventListener("click", (event) => {
+        if (event.target === $("importModal")) closeImport();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && $("importModal").classList.contains("open")) {
+          closeImport();
+        }
+      });
+    }
+
+    function handleCalendarPaste() {
+      const text = $("calendarPaste").value.trim();
+      if (!text) return;
+      const parsed = parseCalendarText(text);
+      let applied = false;
+      if (parsed.project) { $("project").value = parsed.project; applied = true; }
+      if (parsed.date) { $("date").value = parsed.date; applied = true; }
+      if (parsed.startTime) { $("startTime").value = parsed.startTime; applied = true; }
+      if (parsed.endTime) { $("endTime").value = parsed.endTime; applied = true; }
+      if (parsed.sessionType) { $("sessionType").value = parsed.sessionType; applied = true; }
+      if (parsed.requester) { $("requester").value = parsed.requester; applied = true; }
+      if (parsed.team) { $("client").value = parsed.team; applied = true; }
+      if (parsed.meetingLink) { $("meetingLink").value = parsed.meetingLink; applied = true; }
+      if (parsed.mode) { setMode(parsed.mode); applied = true; }
+      if (parsed.tags.length) {
+        const current = splitTags($("tags").value);
+        $("tags").value = unique([...current, ...parsed.tags]).join(", ");
+        applied = true;
+      }
+      if (applied) {
+        $("calendarPaste").value = "";
+        $("calendarPasteField").classList.add("hidden");
+      }
+      updateDuration();
+    }
+
+    function parseCalendarText(text) {
+      const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+      const firstDateIndex = lines.findIndex((line) => parseCalendarDateLine(line).date);
+      const project = firstDateIndex > 0 ? lines[0] : "";
+      const dateInfo = firstDateIndex >= 0 ? parseCalendarDateLine(lines[firstDateIndex]) : {};
+      const sessionType = getAfterLabel(lines, "Type");
+      const requester = getAfterLabel(lines, "Requester Name & Email");
+      const meetingRoom = getAfterLabel(lines, "Meeting Room/Call Link");
+      const meetingLink = extractUrl(meetingRoom) || extractUrl(text);
+      const team = getAfterLabel(lines, "Team");
+      const titleTag = extractBracketTag(project);
+      const tags = [titleTag].filter(Boolean);
+      const modeSource = [sessionType, meetingRoom, meetingLink].filter(Boolean).join(" ");
+
+      return {
+        project,
+        date: dateInfo.date || "",
+        startTime: dateInfo.startTime || "",
+        endTime: dateInfo.endTime || "",
+        sessionType,
+        requester,
+        team,
+        meetingLink,
+        mode: modeSource ? normalizeMode(modeSource) : "",
+        tags
+      };
+    }
+
+    function getAfterLabel(lines, label) {
+      const normalizedLabel = normalizeHeader(label);
+      const index = lines.findIndex((line) => normalizeHeader(line).startsWith(normalizedLabel));
+      if (index < 0) return "";
+      const sameLine = lines[index].slice(label.length).trim();
+      if (sameLine) return sameLine;
+      return lines[index + 1] || "";
+    }
+
+    function getSectionText(lines, startLabel, stopLabels) {
+      const startIndex = lines.findIndex((line) => line.toLowerCase().startsWith(startLabel.toLowerCase()));
+      if (startIndex < 0) return "";
+      const firstLine = lines[startIndex].slice(startLabel.length).trim();
+      const collected = firstLine ? [firstLine] : [];
+      for (let index = startIndex + 1; index < lines.length; index += 1) {
+        if (stopLabels.some((label) => lines[index].toLowerCase().startsWith(label.toLowerCase()))) break;
+        collected.push(lines[index]);
+      }
+      return collected.join("\n").trim();
+    }
+
+    function parseCalendarDateLine(line) {
+      const match = String(line || "").match(/\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+([A-Z][a-z]{2})\s+(\d{1,2})\s+(\d{4}),\s+(.+?)\s*-\s*(.+)$/i);
+      if (!match) return {};
+      const months = { jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06", jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12" };
+      const month = months[match[1].slice(0, 3).toLowerCase()];
+      const date = `${match[3]}-${month}-${match[2].padStart(2, "0")}`;
+      const startTime = parseClockTime(match[4]);
+      const endTime = parseClockTime(match[5], match[4]);
+      return { date, startTime, endTime };
+    }
+
+    function parseClockTime(value, fallbackMeridiemSource = "") {
+      const fallback = String(fallbackMeridiemSource).match(/\b(am|pm)\b/i)?.[1] || "";
+      const match = String(value || "").trim().match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+      if (!match) return "";
+      let hour = Number(match[1]);
+      const minute = Number(match[2] || 0);
+      const meridiem = (match[3] || fallback).toLowerCase();
+      if (meridiem === "pm" && hour < 12) hour += 12;
+      if (meridiem === "am" && hour === 12) hour = 0;
+      return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+    }
+
+    function extractUrl(value) {
+      return String(value || "").match(/https?:\/\/\S+/)?.[0]?.replace(/[)\]]$/, "") || "";
+    }
+
+    function extractBracketTag(value) {
+      return String(value || "").match(/^\[([^\]]+)\]/)?.[1]?.trim() || "";
+    }
+
+    function getScheduleTag(lines) {
+      const schedule = lines.find((line) => line.includes("_Schedule"));
+      return schedule?.split(">").pop()?.trim() || "";
+    }
+
+    function loadEntries() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : SEED_ENTRIES.map((entry) => ({ ...entry }));
+      } catch {
+        return SEED_ENTRIES.map((entry) => ({ ...entry }));
+      }
+    }
+
+    function persist() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.entries));
+      $("storageMeta").textContent = `${state.entries.length.toLocaleString("ko-KR")}건 저장됨`;
+    }
+
+    function setDefaultDate() {
+      $("date").value = toDateInput(new Date());
+    }
+
+    function toDateInput(date) {
+      const offset = date.getTimezoneOffset() * 60000;
+      return new Date(date.getTime() - offset).toISOString().slice(0, 10);
+    }
+
+    function saveEntry(event) {
+      event.preventDefault();
+      const entry = readForm();
+      if (!entry.date || !entry.project.trim()) {
+        toast("저장 보류", "날짜와 제목을 확인해 주세요.");
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const currentId = $("entryId").value;
+      if (currentId) {
+        const index = state.entries.findIndex((item) => item.id === currentId);
+        if (index >= 0) {
+          entry.id = currentId;
+          entry.createdAt = state.entries[index].createdAt || now;
+          entry.updatedAt = now;
+          state.entries[index] = entry;
+        }
+      } else {
+        entry.id = crypto.randomUUID ? crypto.randomUUID() : `entry-${Date.now()}`;
+        entry.createdAt = now;
+        entry.updatedAt = now;
+        state.entries.unshift(entry);
+      }
+      persist();
+      render();
+      editEntry(entry.id);
+      toast("저장됨", entry.project);
+    }
+
+    function readForm() {
+      const mode = document.querySelector("input[name='mode']:checked")?.value || "순차";
+      return {
+        date: $("date").value,
+        status: $("status").value,
+        sessionType: $("sessionType").value.trim(),
+        project: $("project").value.trim(),
+        client: $("client").value.trim(),
+        requester: $("requester").value.trim(),
+        mode,
+        meetingLink: $("meetingLink").value.trim(),
+        domain: splitTags($("tags").value)[0] || "",
+        startTime: $("startTime").value,
+        endTime: $("endTime").value,
+        durationMinutes: getDurationMinutes($("startTime").value, $("endTime").value),
+        summary: $("summary").value.trim(),
+        terms: $("terms").value.trim(),
+        issues: $("issues").value.trim(),
+        followUp: $("followUp").value.trim(),
+        memo: $("memo").value.trim(),
+        tags: splitTags($("tags").value)
+      };
+    }
+
+    function fillForm(entry) {
+      $("entryId").value = entry.id || "";
+      $("date").value = entry.date || toDateInput(new Date());
+      $("status").value = normalizeStatus(entry.status);
+      $("sessionType").value = entry.sessionType || "";
+      $("project").value = entry.project || "";
+      $("client").value = entry.client || "";
+      $("requester").value = entry.requester || "";
+      setMode(getEntryMode(entry));
+      $("meetingLink").value = entry.meetingLink || "";
+      $("startTime").value = entry.startTime || "";
+      $("endTime").value = entry.endTime || "";
+      $("summary").value = entry.summary || "";
+      $("terms").value = entry.terms || "";
+      $("issues").value = entry.issues || "";
+      $("followUp").value = entry.followUp || "";
+      $("memo").value = entry.memo || "";
+      $("tags").value = Array.isArray(entry.tags) && entry.tags.length ? entry.tags.join(", ") : (entry.domain || entry.tags || "");
+      $("calendarPaste").value = "";
+      $("calendarPasteField").classList.toggle("hidden", Boolean(entry.id));
+      $("formTitle").textContent = entry.id ? "기록 편집" : "새 기록";
+      $("formMeta").textContent = entry.updatedAt ? `수정 ${formatDateTime(entry.updatedAt)}` : "필수 항목은 날짜와 제목입니다.";
+      $("deleteCurrentBtn").style.visibility = entry.id ? "visible" : "hidden";
+      updateDuration();
+    }
+
+    function resetForm() {
+      $("entryForm").reset();
+      $("entryId").value = "";
+      setDefaultDate();
+      setMode("원격");
+      $("status").value = "draft";
+      $("calendarPasteField").classList.remove("hidden");
+      $("formTitle").textContent = "새 기록";
+      $("formMeta").textContent = "필수 항목은 날짜와 제목입니다.";
+      $("deleteCurrentBtn").style.visibility = "hidden";
+      updateDuration();
+    }
+
+    function editEntry(id) {
+      const entry = state.entries.find((item) => item.id === id);
+      if (!entry) return;
+      fillForm(entry);
+      if (window.matchMedia("(max-width: 1160px)").matches) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+
+    function deleteCurrentEntry() {
+      const id = $("entryId").value;
+      if (!id) return;
+      const entry = state.entries.find((item) => item.id === id);
+      if (!entry) return;
+      const ok = window.confirm(`'${entry.project || "선택한 기록"}'을 삭제할까요?`);
+      if (!ok) return;
+      state.entries = state.entries.filter((item) => item.id !== id);
+      persist();
+      resetForm();
+      render();
+      toast("삭제됨", entry.project || "기록");
+    }
+
+    function deleteEntry(id) {
+      const entry = state.entries.find((item) => item.id === id);
+      if (!entry) return;
+      const ok = window.confirm(`'${entry.project || "선택한 기록"}'을 삭제할까요?`);
+      if (!ok) return;
+      state.entries = state.entries.filter((item) => item.id !== id);
+      persist();
+      if ($("entryId").value === id) resetForm();
+      render();
+      toast("삭제됨", entry.project || "기록");
+    }
+
+    function setMode(value) {
+      const normalized = normalizeMode(value);
+      const radio = [...document.querySelectorAll("input[name='mode']")].find((item) => item.value === normalized);
+      (radio || $("modeRemote")).checked = true;
+    }
+
+    function render() {
+      persist();
+      renderStats();
+      renderTable();
+      renderDatalists();
+      $("deleteCurrentBtn").style.visibility = $("entryId").value ? "visible" : "hidden";
+    }
+
+    function renderStats() {
+      const count = state.entries.length;
+      const totalMinutes = state.entries.reduce((sum, entry) => sum + safeNumber(entry.durationMinutes), 0);
+      const domains = countBy(state.entries.map((entry) => entry.domain).filter(Boolean));
+      const topDomain = Object.entries(domains).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+      const doneCount = state.entries.filter((entry) => ["done", "billed"].includes(normalizeStatus(entry.status))).length;
+      $("statCount").textContent = count.toLocaleString("ko-KR");
+      $("statHours").textContent = formatHours(totalMinutes);
+      $("statDomain").textContent = topDomain;
+      $("statDone").textContent = count ? `${Math.round((doneCount / count) * 100)}%` : "0%";
+    }
+
+    function renderTable() {
+      const entries = filteredEntries();
+      if (state.activeView === "terms") {
+        renderTermsTable(entries);
+        return;
+      }
+      if (!entries.length) {
+        $("tableWrap").innerHTML = `
+          <div class="empty">
+            <div>
+              <strong>표시할 기록이 없습니다.</strong>
+              <span>새 일지를 저장하거나 CSV를 가져오면 목록에 나타납니다.</span>
+            </div>
+          </div>`;
+        return;
+      }
+
+      const rows = entries.map((entry) => {
+        const status = normalizeStatus(entry.status);
+        const tags = Array.isArray(entry.tags) ? entry.tags : splitTags(entry.tags || "");
+        return `
+          <tr>
+            <td>${escapeHtml(formatDate(entry.date))}</td>
+            <td class="title-cell">
+              <strong>${escapeHtml(entry.project || "-")}</strong>
+              <span class="muted">${escapeHtml([entry.client, entry.requester, entry.sessionType].filter(Boolean).join(" / ") || "-")}</span>
+              <div class="badge-row">
+                <span class="badge status-${status}">${escapeHtml(statusLabels[status] || status)}</span>
+                ${tags.slice(0, 3).map((tag) => `<span class="badge">${escapeHtml(tag)}</span>`).join("")}
+              </div>
+            </td>
+            <td>${escapeHtml(getEntryMode(entry))}</td>
+            <td>${escapeHtml(tags.join(", ") || entry.domain || "-")}</td>
+            <td>${escapeHtml(formatMinutes(entry.durationMinutes))}</td>
+            <td>${escapeHtml(shortText(entry.summary || entry.issues || entry.followUp || entry.memo || "", 120))}</td>
+            <td>
+              <div class="row-actions">
+                <button class="btn icon-btn btn-quiet" type="button" title="편집" data-action="edit" data-id="${entry.id}">
+                  <svg><use href="#icon-edit"></use></svg>
+                </button>
+                <button class="btn icon-btn btn-quiet" type="button" title="삭제" data-action="delete" data-id="${entry.id}">
+                  <svg><use href="#icon-trash"></use></svg>
+                </button>
+              </div>
+            </td>
+          </tr>`;
+      }).join("");
+
+      $("tableWrap").innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>제목</th>
+              <th>방식</th>
+              <th>태그</th>
+              <th>분량</th>
+              <th>메모</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+
+      $("tableWrap").querySelectorAll("[data-action='edit']").forEach((button) => {
+        button.addEventListener("click", () => editEntry(button.dataset.id));
+      });
+      $("tableWrap").querySelectorAll("[data-action='delete']").forEach((button) => {
+        button.addEventListener("click", () => deleteEntry(button.dataset.id));
+      });
+    }
+
+    function renderTermsTable(entries) {
+      const termRows = entries.flatMap((entry) => extractTerms(entry).map((term) => ({ entry, term })));
+      if (!termRows.length) {
+        $("tableWrap").innerHTML = `
+          <div class="empty">
+            <div>
+              <strong>아직 용어가 없습니다.</strong>
+              <span>일지의 용어 칸에 한 줄씩 적으면 이 탭에 모입니다.</span>
+            </div>
+          </div>`;
+        return;
+      }
+
+      const rows = termRows.map(({ entry, term }) => {
+        return `
+          <tr>
+            <td><strong>${escapeHtml(term.source || "-")}</strong></td>
+            <td>${escapeHtml(term.translation || "-")}</td>
+            <td>${escapeHtml(term.description || "-")}</td>
+            <td class="title-cell">
+              <strong>${escapeHtml(entry.project || "-")}</strong>
+            </td>
+            <td>${escapeHtml(formatDate(entry.date))}</td>
+            <td>
+              <div class="row-actions">
+                <button class="btn icon-btn btn-quiet" type="button" title="원본 편집" data-action="edit" data-id="${entry.id}">
+                  <svg><use href="#icon-edit"></use></svg>
+                </button>
+              </div>
+            </td>
+          </tr>`;
+      }).join("");
+
+      $("tableWrap").innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>원문</th>
+              <th>번역</th>
+              <th>설명</th>
+              <th>회의명</th>
+              <th>등록날짜</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+
+      $("tableWrap").querySelectorAll("[data-action='edit']").forEach((button) => {
+        button.addEventListener("click", () => editEntry(button.dataset.id));
+      });
+    }
+
+    function filteredEntries() {
+      const query = ($("searchInput").value || "").trim().toLowerCase();
+      const mode = $("modeFilter").value;
+      const status = $("statusFilter").value;
+      const from = $("fromFilter").value;
+      const to = $("toFilter").value;
+      return [...state.entries]
+        .filter((entry) => !mode || getEntryMode(entry) === mode)
+        .filter((entry) => !status || normalizeStatus(entry.status) === status)
+        .filter((entry) => !from || (entry.date || "") >= from)
+        .filter((entry) => !to || (entry.date || "") <= to)
+        .filter((entry) => {
+          if (!query) return true;
+          return [
+            entry.date, entry.project, entry.client, entry.requester, getEntryMode(entry),
+            entry.sessionType, entry.meetingLink, entry.domain,
+            entry.summary, entry.terms, entry.issues,
+            entry.followUp, entry.memo, Array.isArray(entry.tags) ? entry.tags.join(" ") : entry.tags
+          ].filter(Boolean).join(" ").toLowerCase().includes(query);
+        })
+        .sort((a, b) => `${b.date || ""} ${b.startTime || ""}`.localeCompare(`${a.date || ""} ${a.startTime || ""}`));
+    }
+
+    function renderDatalists() {
+      const clients = unique(state.entries.map((entry) => entry.client).filter(Boolean)).slice(0, 80);
+      $("clientList").innerHTML = clients.map((client) => `<option value="${escapeHtml(client)}">`).join("");
+    }
+
+    function openImport() {
+      $("importModal").classList.add("open");
+      $("csvText").focus();
+    }
+
+    function closeImport() {
+      $("importModal").classList.remove("open");
+    }
+
+    async function handleCsvFile(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      $("csvText").value = await file.text();
+    }
+
+    function importCsv() {
+      const text = $("csvText").value.trim();
+      if (!text) {
+        toast("가져오기 보류", "CSV 내용이 비어 있습니다.");
+        return;
+      }
+
+      const rows = parseCsv(text);
+      if (rows.length < 2) {
+        toast("가져오기 보류", "헤더와 데이터 행을 확인해 주세요.");
+        return;
+      }
+
+      const headers = rows[0].map((cell) => cell.trim());
+      const imported = rows.slice(1)
+        .filter((row) => row.some((cell) => String(cell || "").trim()))
+        .map((row) => normalizeImportedRow(headers, row))
+        .filter((entry) => entry.date || entry.project || entry.summary);
+
+      if (!imported.length) {
+        toast("가져오기 보류", "매핑 가능한 행이 없습니다.");
+        return;
+      }
+
+      const mode = document.querySelector("input[name='importMode']:checked")?.value || "append";
+      state.entries = mode === "replace" ? imported : [...imported, ...state.entries];
+      persist();
+      resetForm();
+      render();
+      closeImport();
+      toast("가져오기 완료", `${imported.length.toLocaleString("ko-KR")}건 반영`);
+    }
+
+    function normalizeImportedRow(headers, row) {
+      const source = {};
+      headers.forEach((header, index) => {
+        source[header] = row[index] || "";
+      });
+
+      const entry = {
+        id: crypto.randomUUID ? crypto.randomUUID() : `entry-${Date.now()}-${Math.random()}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        date: normalizeDate(getMapped(source, "date")),
+        status: normalizeStatus(getMapped(source, "status")),
+        sessionType: getMapped(source, "sessionType").trim(),
+        project: getMapped(source, "project").trim(),
+        client: getMapped(source, "client").trim(),
+        requester: getMapped(source, "requester").trim(),
+        mode: normalizeMode(getMapped(source, "mode")),
+        meetingLink: getMapped(source, "meetingLink").trim(),
+        languagePair: getMapped(source, "languagePair").trim(),
+        sourceLang: getMapped(source, "sourceLang").trim(),
+        targetLang: getMapped(source, "targetLang").trim(),
+        domain: getMapped(source, "domain").trim(),
+        place: getMapped(source, "place").trim(),
+        startTime: normalizeTime(getMapped(source, "startTime")),
+        endTime: normalizeTime(getMapped(source, "endTime")),
+        prepMinutes: numberOrBlank(getMapped(source, "prepMinutes")),
+        durationMinutes: numberOrBlank(getMapped(source, "durationMinutes")),
+        difficulty: numberOrBlank(getMapped(source, "difficulty")),
+        score1: numberOrBlank(getMapped(source, "score1")),
+        score2: numberOrBlank(getMapped(source, "score2")),
+        score3: numberOrBlank(getMapped(source, "score3")),
+        rating: numberOrBlank(getMapped(source, "rating")),
+        participants: getMapped(source, "participants").trim(),
+        summary: getMapped(source, "summary").trim(),
+        terms: getMapped(source, "terms").trim(),
+        issues: getMapped(source, "issues").trim(),
+        followUp: getMapped(source, "followUp").trim(),
+        memo: getMapped(source, "memo").trim(),
+        tags: splitTags(getMapped(source, "tags"))
+      };
+
+      const languagePair = entry.languagePair;
+      if (languagePair && (!entry.sourceLang || !entry.targetLang)) {
+        const pair = splitLanguagePair(languagePair);
+        entry.sourceLang = entry.sourceLang || pair[0] || "";
+        entry.targetLang = entry.targetLang || pair[1] || "";
+      }
+
+      if (!entry.durationMinutes) {
+        entry.durationMinutes = getDurationMinutes(entry.startTime, entry.endTime);
+      }
+
+      if (!entry.project) {
+        entry.project = [entry.client, entry.domain, entry.summary].filter(Boolean)[0] || "통역 기록";
+      }
+
+      return entry;
+    }
+
+    function getMapped(rowObject, targetKey) {
+      const wanted = headerMap[targetKey] || [];
+      const entries = Object.entries(rowObject);
+      const exact = entries.find(([header]) => wanted.includes(normalizeHeader(header)));
+      if (exact) return String(exact[1] || "");
+      const contains = entries.find(([header]) => {
+        const normalized = normalizeHeader(header);
+        return wanted.some((key) => normalized.includes(key) || key.includes(normalized));
+      });
+      return contains ? String(contains[1] || "") : "";
+    }
+
+    function normalizeHeader(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/[()［］[\]{}]/g, " ")
+        .replace(/[_\-:/]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let cell = "";
+      let quoted = false;
+      const normalized = text.replace(/^\uFEFF/, "");
+      for (let i = 0; i < normalized.length; i += 1) {
+        const char = normalized[i];
+        const next = normalized[i + 1];
+        if (char === '"') {
+          if (quoted && next === '"') {
+            cell += '"';
+            i += 1;
+          } else {
+            quoted = !quoted;
+          }
+        } else if (char === "," && !quoted) {
+          row.push(cell);
+          cell = "";
+        } else if ((char === "\n" || char === "\r") && !quoted) {
+          if (char === "\r" && next === "\n") i += 1;
+          row.push(cell);
+          rows.push(row);
+          row = [];
+          cell = "";
+        } else {
+          cell += char;
+        }
+      }
+      row.push(cell);
+      rows.push(row);
+      return rows.filter((items) => items.some((item) => String(item || "").trim()));
+    }
+
+    function downloadTemplate() {
+      const header = csvHeader();
+      downloadText(`${header.join(",")}\n`, "interpreter-log-template.csv", "text/csv;charset=utf-8");
+    }
+
+    function downloadCsv(entries, filename) {
+      const header = csvHeader();
+      const rows = entries.map((entry) => header.map((label) => toCsvCell(valueByHeader(entry, label))).join(","));
+      downloadText([header.map(toCsvCell).join(","), ...rows].join("\n"), filename, "text/csv;charset=utf-8");
+      toast("내보내기 완료", `${entries.length.toLocaleString("ko-KR")}건`);
+    }
+
+    function csvHeader() {
+      return ["날짜", "회의형태", "제목", "팀", "요청자", "상태", "방식", "미팅링크", "시작시간", "종료시간", "통역시간", "잘한점", "용어", "아쉬운점", "개선", "메모", "태그"];
+    }
+
+    function valueByHeader(entry, label) {
+      const lookup = {
+        "날짜": entry.date,
+        "회의형태": entry.sessionType,
+        "제목": entry.project,
+        "팀": entry.client,
+        "요청자": entry.requester,
+        "상태": statusLabels[normalizeStatus(entry.status)] || entry.status,
+        "방식": getEntryMode(entry),
+        "미팅링크": entry.meetingLink,
+        "시작시간": entry.startTime,
+        "종료시간": entry.endTime,
+        "통역시간": entry.durationMinutes,
+        "잘한점": entry.summary,
+        "용어": entry.terms,
+        "아쉬운점": entry.issues,
+        "개선": entry.followUp,
+        "메모": entry.memo,
+        "태그": Array.isArray(entry.tags) ? entry.tags.join(", ") : entry.tags
+      };
+      return lookup[label] ?? "";
+    }
+
+    function downloadText(text, filename, type) {
+      const blob = new Blob([text], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function toCsvCell(value) {
+      const text = String(value ?? "");
+      if (/[",\n\r]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
+      return text;
+    }
+
+    function getDurationMinutes(start, end) {
+      if (!start || !end) return 0;
+      const [sh, sm] = start.split(":").map(Number);
+      const [eh, em] = end.split(":").map(Number);
+      if ([sh, sm, eh, em].some(Number.isNaN)) return 0;
+      let minutes = (eh * 60 + em) - (sh * 60 + sm);
+      if (minutes < 0) minutes += 24 * 60;
+      return minutes;
+    }
+
+    function updateDuration() {
+      const minutes = getDurationMinutes($("startTime").value, $("endTime").value);
+      $("durationChip").textContent = formatMinutes(minutes);
+    }
+
+    function getEntryMode(entry) {
+      return normalizeMode([entry.mode, entry.sessionType, entry.meetingLink, entry.place].filter(Boolean).join(" "));
+    }
+
+    function extractTerms(entry) {
+      return String(entry.terms || "")
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map(parseTermLine);
+    }
+
+    function parseTermLine(line) {
+      const text = String(line || "").trim();
+      if (!text) return { source: "", translation: "", description: "" };
+
+      const dashParts = text.split(/\s+[–—-]\s+/).map((part) => part.trim()).filter(Boolean);
+      if (dashParts.length >= 2) {
+        return {
+          source: dashParts[0],
+          translation: dashParts[1],
+          description: dashParts.slice(2).join(" - ")
+        };
+      }
+
+      const equalParts = text.split(/\s*=\s*/).map((part) => part.trim()).filter(Boolean);
+      if (equalParts.length >= 2) {
+        const [translation, ...descriptionParts] = equalParts.slice(1).join(" = ").split(/\s+\/\s+/);
+        return {
+          source: equalParts[0],
+          translation: (translation || "").trim(),
+          description: descriptionParts.join(" / ").trim()
+        };
+      }
+
+      const colonParts = text.split(/\s*:\s*/).map((part) => part.trim()).filter(Boolean);
+      if (colonParts.length >= 2) {
+        return {
+          source: colonParts[0],
+          translation: colonParts[1],
+          description: colonParts.slice(2).join(": ")
+        };
+      }
+
+      return { source: text, translation: "", description: "" };
+    }
+
+    function splitTags(value) {
+      if (Array.isArray(value)) return value.map(String).map((item) => item.trim()).filter(Boolean);
+      return String(value || "").split(/[,#;]/).map((item) => item.trim()).filter(Boolean);
+    }
+
+    function splitLanguagePair(value) {
+      return String(value || "")
+        .split(/\s*(?:->|→|>|\/|,|-|to|에서|으로)\s*/i)
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .slice(0, 2);
+    }
+
+    function normalizeMode(value) {
+      const text = String(value || "").trim().toLowerCase();
+      if (/(remote|online|zoom|call link|원격|화상|화상회의|링크)/.test(text)) return "원격";
+      if (/(onsite|in[- ]?person|offline|현장|대면|통역실|회의실)/.test(text)) return "현장";
+      return "현장";
+    }
+
+    function normalizeStatus(value) {
+      const text = String(value || "").trim().toLowerCase();
+      if (/(done|complete|완료)/.test(text)) return "done";
+      if (/(follow|후속|todo|pending)/.test(text)) return "follow";
+      if (/(bill|invoice|정산|청구)/.test(text)) return "billed";
+      return "draft";
+    }
+
+    function normalizeDate(value) {
+      const text = String(value || "").trim();
+      if (!text) return "";
+      const iso = text.match(/^(\d{4})[./-](\d{1,2})[./-](\d{1,2})/);
+      if (iso) return `${iso[1]}-${iso[2].padStart(2, "0")}-${iso[3].padStart(2, "0")}`;
+      const korean = text.match(/^(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+      if (korean) return `${korean[1]}-${korean[2].padStart(2, "0")}-${korean[3].padStart(2, "0")}`;
+      const parsed = new Date(text);
+      return Number.isNaN(parsed.getTime()) ? text : toDateInput(parsed);
+    }
+
+    function normalizeTime(value) {
+      const text = String(value || "").trim();
+      if (!text) return "";
+      const match = text.match(/(\d{1,2})[:시]\s*(\d{1,2})?/);
+      if (!match) return "";
+      return `${match[1].padStart(2, "0")}:${(match[2] || "00").padStart(2, "0")}`;
+    }
+
+    function numberOrBlank(value) {
+      if (value === "" || value === null || value === undefined) return "";
+      const normalized = String(value).replace(/[^\d.-]/g, "");
+      if (!normalized) return "";
+      const number = Number(normalized);
+      return Number.isFinite(number) ? number : "";
+    }
+
+    function safeNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function countBy(values) {
+      return values.reduce((acc, value) => {
+        acc[value] = (acc[value] || 0) + 1;
+        return acc;
+      }, {});
+    }
+
+    function unique(values) {
+      return [...new Set(values)];
+    }
+
+    function formatDate(value) {
+      if (!value) return "-";
+      const parts = String(value).split("-");
+      if (parts.length !== 3) return value;
+      return `${parts[0]}.${parts[1]}.${parts[2]}`;
+    }
+
+    function formatDateTime(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+      return new Intl.DateTimeFormat("ko-KR", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(date);
+    }
+
+    function formatLanguage(entry) {
+      if (entry.languagePair) return entry.languagePair;
+      if (entry.sourceLang && entry.targetLang) return `${entry.sourceLang} → ${entry.targetLang}`;
+      return entry.sourceLang || entry.targetLang || "";
+    }
+
+    function formatScores(entry) {
+      const scores = [entry.score1, entry.score2, entry.score3, entry.rating]
+        .map((value) => value === "" || value === undefined || value === null ? "" : String(value))
+        .filter(Boolean);
+      const difficulty = entry.difficulty === "" || entry.difficulty === undefined || entry.difficulty === null ? "" : `난이도 ${entry.difficulty}`;
+      if (difficulty && scores.length) return `${difficulty} · ${scores.join("/")}`;
+      return difficulty || (scores.length ? scores.join("/") : "-");
+    }
+
+    function formatTimeRange(entry) {
+      if (entry.startTime && entry.endTime) return `${entry.startTime}-${entry.endTime}`;
+      return entry.startTime || entry.endTime || "-";
+    }
+
+    function formatMinutes(minutes) {
+      const total = safeNumber(minutes);
+      if (!total) return "0분";
+      const h = Math.floor(total / 60);
+      const m = total % 60;
+      return h ? `${h}시간 ${m ? `${m}분` : ""}`.trim() : `${m}분`;
+    }
+
+    function formatHours(minutes) {
+      const hours = safeNumber(minutes) / 60;
+      if (hours === 0) return "0h";
+      return `${Number.isInteger(hours) ? hours : hours.toFixed(1)}h`;
+    }
+
+    function shortText(value, maxLength) {
+      const text = String(value || "").replace(/\s+/g, " ").trim();
+      if (text.length <= maxLength) return text || "-";
+      return `${text.slice(0, maxLength - 1)}…`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    let toastTimer;
+    function toast(title, body) {
+      clearTimeout(toastTimer);
+      $("toastTitle").textContent = title;
+      $("toastBody").textContent = body || "";
+      $("toast").classList.add("show");
+      toastTimer = setTimeout(() => $("toast").classList.remove("show"), 2600);
+    }
+  </script>
+</body>
+</html>
